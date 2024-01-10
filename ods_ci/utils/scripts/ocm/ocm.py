@@ -409,7 +409,7 @@ class OpenshiftClusterManager:
                 "{}".format(addon_name, self.cluster_name)
             )
             return None
-        match = re.search(addon_name + "\s*(.*)", ret)
+        match = re.search(addon_name + r"\s*(.*)", ret)
         if match is None:
             log.info("regex failed in get_addon_state")
             return None
@@ -569,15 +569,6 @@ class OpenshiftClusterManager:
             return False
         else:
             return True
-
-    def hide_values_in_op_json(self, fields, json_str):
-        json_dict = json.loads(json_str)
-        params = json_dict["parameters"]["items"]
-        for field in fields:
-            for p in params:
-                if p["id"] == field:
-                    p["value"] = "##hidden##"
-        return json.dumps(json_dict)
 
     def hide_values_in_op_json(self, fields, json_str):
         json_dict = json.loads(json_str)
