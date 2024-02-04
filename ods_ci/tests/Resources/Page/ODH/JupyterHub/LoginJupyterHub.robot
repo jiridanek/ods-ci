@@ -5,7 +5,7 @@ Resource  ../../../RHOSi.resource
 
 *** Keywords ***
 Special User Testing Suite Setup
-  Set Library Search Order  SeleniumLibrary
+  Set Library Search Order  SeleniumLibraryToBrowser
   RHOSi Setup
 
 Login To Jupyterhub

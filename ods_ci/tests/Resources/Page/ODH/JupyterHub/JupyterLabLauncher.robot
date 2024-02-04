@@ -6,7 +6,7 @@ Library  OperatingSystem
 Library  Screenshot
 Library  String
 Library  OpenShiftLibrary
-Library  SeleniumLibrary
+Library  SeleniumLibraryToBrowser
 
 
 *** Variables ***

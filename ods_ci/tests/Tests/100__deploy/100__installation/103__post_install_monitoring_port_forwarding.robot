@@ -66,7 +66,7 @@ Verify Access To Alert Manager Using Browser
 Post Install Monitoring Port Forwarding Suite Setup
     [Documentation]    Suite Setup
     RHOSi Setup
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
 
 Post Install Monitoring Port Forwarding Suite Teardown
     [Documentation]    Suite Teardown

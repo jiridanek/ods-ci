@@ -57,7 +57,7 @@ Set Default Access Groups And Close Browser
 
 Rbac Suite Setup
     [Documentation]    Suite setup
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
     RHOSi Setup
 
 Rbac Suite Teardown

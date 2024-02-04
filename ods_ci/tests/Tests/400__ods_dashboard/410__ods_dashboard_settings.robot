@@ -1,7 +1,7 @@
 *** Settings ***
 Documentation       Tests features in ODS Dashboard "Settings" section
 
-Library             SeleniumLibrary
+Library             SeleniumLibraryToBrowser
 Resource            ../../Resources/Page/ODH/ODHDashboard/ODHDashboard.resource
 Resource            ../../Resources/Page/ODH/ODHDashboard/ODHDashboardSettings.resource
 Resource            ../../Resources/RHOSi.resource
@@ -70,7 +70,7 @@ Restore Default Configuration For "Usage Data Collection" And TearDown
 
 Dashboard Settings Suite Setup
     [Documentation]    Suite setup
-    Set Library Search Order    SeleniumWireLibrary    SeleniumLibrary
+    Set Library Search Order    SeleniumWireLibrary    SeleniumLibraryToBrowser
     RHOSi Setup
 
 Dashboard Settings Test Teardown

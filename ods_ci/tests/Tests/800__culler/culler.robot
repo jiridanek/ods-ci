@@ -8,7 +8,7 @@ Resource         ../../Resources/Page/ODH/ODHDashboard/ODHDashboard.robot
 Resource         ../../Resources/Page/ODH/ODHDashboard/ODHDashboardSettings.resource
 Library          ../../../libs/Helpers.py
 Library          OpenShiftLibrary
-Suite Setup      Set Library Search Order    SeleniumLibrary
+Suite Setup      Set Library Search Order    SeleniumLibraryToBrowser
 Suite Teardown   Teardown
 Test Tags       JupyterHub
 

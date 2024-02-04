@@ -1,5 +1,5 @@
 *** Settings ***
-Library   SeleniumLibrary
+Library   SeleniumLibraryToBrowser
 Library   JupyterLibrary
 Library   OperatingSystem
 Library   Process
@@ -24,7 +24,7 @@ Begin Web Test
     ...              handing control over to the test suites.
     [Arguments]    ${username}=${TEST_USER.USERNAME}    ${password}=${TEST_USER.PASSWORD}
     ...            ${auth_type}=${TEST_USER.AUTH_TYPE}
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
     RHOSi Setup
     Open Browser  ${ODH_DASHBOARD_URL}  browser=${BROWSER.NAME}  options=${BROWSER.OPTIONS}
     Login To RHODS Dashboard  ${username}  ${password}  ${auth_type}

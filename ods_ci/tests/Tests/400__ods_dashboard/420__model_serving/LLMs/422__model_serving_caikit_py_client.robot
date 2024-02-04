@@ -5,7 +5,7 @@ Documentation    Test suite to validate caikit-nlp-client library usage with Kse
 Resource          ../../../../Resources/CLI/ModelServing/llm.resource
 Suite Setup    Caikit Client Suite Setup
 Suite Teardown    Caikit Client Suite Teardown
-Test Teardown    SeleniumLibrary.Close All Browsers
+Test Teardown    SeleniumLibraryToBrowser.Close All Browsers
 
 
 *** Variables ***
@@ -55,7 +55,7 @@ Caikit Client Suite Setup
     [Documentation]    Suite setup which loads the expected model responses, fetch the knative self-signed certificate
     ...                and run the RHOSi Setup checks
     RHOSi Setup
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
     Load Expected Responses
     ${QUERY_TEXT}=    Set Variable    ${EXP_RESPONSES}[queries][0][query_text]
     ${cleaned_exp_response_text}=    Replace String Using Regexp    ${EXP_RESPONSES}[queries][0][models][${ISVC_NAME}][response_text]    \\s+    ${SPACE}
@@ -166,4 +166,4 @@ Caikit Nlp Client Jupyter Notebook Should Run Successfully
     Wait Until JupyterLab Code Cell Is Not Active  timeout=${timeout}
     Sleep  1
     JupyterLab Code Cell Error Output Should Not Be Visible
-    SeleniumLibrary.Capture Page Screenshot
+    SeleniumLibraryToBrowser.Capture Page Screenshot

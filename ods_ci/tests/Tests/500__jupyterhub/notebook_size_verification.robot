@@ -12,7 +12,7 @@ Documentation       NOTEBOOK_SIZE_VERIFICATION
 Library             OperatingSystem
 Library             Collections
 Library             Process
-Library             SeleniumLibrary
+Library             SeleniumLibraryToBrowser
 Resource            ../../Resources/Page/ODH/JupyterHub/ODHJupyterhub.resource
 Resource            ../../Resources/Page/ODH/ODHDashboard/ODHDashboard.robot
 Resource            ../../Resources/RHOSi.resource
@@ -57,7 +57,7 @@ Verify Spawned Notebook Size
 *** Keywords ***
 Dashboard Test Setup
     [Documentation]    Open browser and load RHODS dashboard
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     #RHOSi Setup
     Open Browser    ${ODH_DASHBOARD_URL}    browser=${BROWSER.NAME}    options=${BROWSER.OPTIONS}
     Login To RHODS Dashboard    ${TEST_USER.USERNAME}    ${TEST_USER.PASSWORD}    ${TEST_USER.AUTH_TYPE}

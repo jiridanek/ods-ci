@@ -1,5 +1,5 @@
 *** Settings ***
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 Library         Collections
 Library         JupyterLibrary
 Library         String
@@ -39,7 +39,7 @@ Test User Notebook Plugin in JupyterLab
 
 *** Keywords ***
 Plugin Testing Suite Setup
-   Set Library Search Order  SeleniumLibrary
+   Set Library Search Order  SeleniumLibraryToBrowser
    RHOSi Setup
    ${notebook_pod_name}         Get User Notebook Pod Name         ${TEST_USER.USERNAME}
    Set Suite Variable     ${notebook_pod_name}

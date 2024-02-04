@@ -31,7 +31,7 @@ Test Special Usernames
 
 *** Keywords ***
 Special User Testing Suite Setup
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
     RHOSi Setup
 
 Login Verify Logout

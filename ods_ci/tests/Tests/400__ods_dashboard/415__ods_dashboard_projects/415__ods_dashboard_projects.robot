@@ -1,6 +1,6 @@
 *** Settings ***
 Documentation      Suite to test Data Science Projects (a.k.a DSG) feature
-Library            SeleniumLibrary
+Library            SeleniumLibraryToBrowser
 Library            OpenShiftLibrary
 Resource           ../../../Resources/OCP.resource
 Resource           ../../../Resources/Page/ODH/ODHDashboard/ODHDataScienceProject/Projects.resource
@@ -165,12 +165,12 @@ Verify User Can Create And Start A Workbench Adding A New PV Storage
     ...                 storage=Persistent  pv_existent=${FALSE}
     ...                 pv_name=${pv_name}  pv_description=${PV_DESCRIPTION}  pv_size=${PV_SIZE}
     Workbench Should Be Listed      workbench_title=${WORKBENCH_3_TITLE}
-    #SeleniumLibrary.Reload Page
+    #SeleniumLibraryToBrowser.Reload Page
     #Wait Until Project Is Open    project_title=${PRJ_TITLE}
     Workbench Status Should Be      workbench_title=${WORKBENCH_3_TITLE}      status=${WORKBENCH_STATUS_STARTING}
     Run Keyword And Continue On Failure    Wait Until Workbench Is Started     workbench_title=${WORKBENCH_3_TITLE}
     Check Corresponding Notebook CR Exists      workbench_title=${WORKBENCH_3_TITLE}   namespace=${ns_name}
-    #SeleniumLibrary.Reload Page
+    #SeleniumLibraryToBrowser.Reload Page
     #Wait Until Project Is Open    project_title=${PRJ_TITLE}
     ${connected_woksps}=    Create List    ${WORKBENCH_3_TITLE}
     Storage Should Be Listed    name=${pv_name}    description=${PV_DESCRIPTION}
@@ -476,7 +476,7 @@ Verify Users Can Start, Stop, Launch And Delete A Workbench
     ...    auth_type=${TEST_USER_3.AUTH_TYPE}
     Check Launched Workbench Is The Correct One     workbench_title=${WORKBENCH_TITLE}
     ...    image=${NB_IMAGE}    project_title=${PRJ_TITLE}
-    SeleniumLibrary.Switch Window    title=Red Hat OpenShift AI
+    SeleniumLibraryToBrowser.Switch Window    title=Red Hat OpenShift AI
     Wait Until Project Is Open    project_title=${PRJ_TITLE}
     Delete Workbench    workbench_title=${WORKBENCH_TITLE}
     Workbench Should Not Be Listed    workbench_title=${WORKBENCH_TITLE}
@@ -485,7 +485,7 @@ Verify Users Can Start, Stop, Launch And Delete A Workbench
     [Teardown]    Run Keywords
     ...    Clean Project From Workbench Resources    workbench_title=${WORKBENCH_TITLE}    project_title=${PRJ_TITLE}
     ...    AND
-    ...    SeleniumLibrary.Close Browser
+    ...    SeleniumLibraryToBrowser.Close Browser
 
 Verify Users Can Start, Stop And Launch A Workbench From DS Projects Home Page
     [Tags]     Smoke    Sanity    Tier1
@@ -521,7 +521,7 @@ Verify Users Can Start, Stop And Launch A Workbench From DS Projects Home Page
     [Teardown]    Run Keywords
     ...    Clean Project From Workbench Resources    workbench_title=${WORKBENCH_TITLE}    project_title=${PRJ_TITLE}
     ...    AND
-    ...    SeleniumLibrary.Close Browser
+    ...    SeleniumLibraryToBrowser.Close Browser
 
 Verify User Can Delete A Data Science Project
     [Tags]    Smoke    Sanity    Tier1
@@ -537,7 +537,7 @@ Verify User Can Access Only Its Owned Projects
     [Documentation]    Verifies each user can access only they owned projects. Except for
     ...                cluster and dedicated admins which should be able to fetch all the DS Projects
     [Setup]    Run Keywords
-    ...    SeleniumLibrary.Close All Browsers
+    ...    SeleniumLibraryToBrowser.Close All Browsers
     ...    AND
     ...    Set Variables For User Access Test
     ...    AND
@@ -586,7 +586,7 @@ Verify User Can Access Only Its Owned Projects
 Project Suite Setup
     [Documentation]    Suite setup steps for testing DS Projects. It creates some test variables
     ...                and runs RHOSi setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     ${to_delete}=    Create List    ${PRJ_TITLE}
     Set Suite Variable    ${PROJECTS_TO_DELETE}    ${to_delete}
     RHOSi Setup
@@ -597,7 +597,7 @@ Project Suite Setup
 Project Suite Teardown
     [Documentation]    Suite teardown steps after testing DS Projects. It Deletes
     ...                all the DS projects created by the tests and run RHOSi teardown
-    SeleniumLibrary.Close All Browsers
+    SeleniumLibraryToBrowser.Close All Browsers
     # Delete All Data Science Projects From CLI
     Delete Data Science Projects From CLI   ocp_projects=${PROJECTS_TO_DELETE}
     RHOSi Teardown

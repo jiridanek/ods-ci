@@ -1,6 +1,6 @@
 *** Settings ***
 Documentation      Suite to test Data Science Projects (a.k.a DSG) feature aimed on editing the existing instances
-Library            SeleniumLibrary
+Library            SeleniumLibraryToBrowser
 Library            OpenShiftLibrary
 Resource           ../../../Resources/OCP.resource
 Resource           ../../../Resources/Page/ODH/ODHDashboard/ODHDataScienceProject/Projects.resource
@@ -92,7 +92,7 @@ Verify User Can Edit A S3 Data Connection
     Should Be Equal  ${s3_endpoint}  ${DC_S3_ENDPOINT}
     Should Be Equal  ${s3_region}  ${DC_S3_REGION}
     Should Be Equal  ${s3_bucket}  ods-ci-ds-pipelines-test
-    SeleniumLibrary.Click Button    ${GENERIC_CANCEL_BTN_XP}
+    SeleniumLibraryToBrowser.Click Button    ${GENERIC_CANCEL_BTN_XP}
     Delete Data Connection    name=${DC_S3_NAME}-test
 
 
@@ -100,7 +100,7 @@ Verify User Can Edit A S3 Data Connection
 Project Suite Setup
     [Documentation]    Suite setup steps for testing DS Projects. It creates some test variables
     ...                and runs RHOSi setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
     Launch Data Science Project Main Page
     Create Data Science Project    title=${PRJ_TITLE}    description=${PRJ_DESCRIPTION}

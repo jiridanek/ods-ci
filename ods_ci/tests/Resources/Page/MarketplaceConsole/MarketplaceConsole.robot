@@ -1,6 +1,6 @@
 *** Settings ***
 Library         Collections
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 
 *** Keywords ***
 Is SSO Login Page Visible

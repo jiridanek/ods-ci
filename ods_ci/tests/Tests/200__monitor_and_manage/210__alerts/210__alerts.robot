@@ -7,7 +7,7 @@ Resource            ../../../Resources/Common.robot
 Resource            ../../../Resources/Page/OCPDashboard/Builds/Builds.robot
 Resource            ../../../Resources/Page/ODH/JupyterHub/HighAvailability.robot
 Library             OperatingSystem
-Library             SeleniumLibrary
+Library             SeleniumLibraryToBrowser
 Library             JupyterLibrary
 
 Suite Setup         Alerts Suite Setup
@@ -308,7 +308,7 @@ Verify That MT-SRE Are Not Paged For Alerts In Clusters Used For Development Or 
 *** Keywords ***
 Alerts Suite Setup
     [Documentation]    Test suite configuration
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     Skip If RHODS Is Self-Managed
     RHOSi Setup
 

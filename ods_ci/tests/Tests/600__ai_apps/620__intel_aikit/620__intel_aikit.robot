@@ -5,7 +5,7 @@ Resource        ../../../Resources/Page/OCPDashboard/OCPDashboard.resource
 Resource        ../../../Resources/Page/ODH/JupyterHub/ODHJupyterhub.resource
 Resource        ../../../Resources/Page/ODH/AiApps/AiApps.resource
 Resource        ../../../Resources/RHOSi.resource
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 Suite Setup     Intel_Aikit Suite Setup
 Suite Teardown  Intel_Aikit Suite Teardown
 
@@ -47,7 +47,7 @@ Verify Intel AIKIT Operator Can Be Installed Using OpenShift Console
 
 ***Keywords ***
 Intel_Aikit Suite Setup
-  Set Library Search Order  SeleniumLibrary
+  Set Library Search Order  SeleniumLibraryToBrowser
   RHOSi Setup
 
 Intel_Aikit Suite Teardown

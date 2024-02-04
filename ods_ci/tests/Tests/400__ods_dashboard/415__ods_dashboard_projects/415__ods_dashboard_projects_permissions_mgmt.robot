@@ -103,7 +103,7 @@ Verify Project Sharing Does Not Override Dashboard Permissions
 Project Permissions Mgmt Suite Setup    # robocop: disable
     [Documentation]    Suite setup steps for testing DS Projects.
     ...                It creates some test variables and runs RHOSi setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
     Set Standard RHODS Groups Variables
     Set Default Access Groups Settings

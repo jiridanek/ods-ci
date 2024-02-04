@@ -500,7 +500,7 @@ Verify Jupyter Card CSS Style
     ...    operation=contains
 
 Test Setup For Login Page
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     Open Browser    ${ODH_DASHBOARD_URL}    browser=${BROWSER.NAME}    options=${BROWSER.OPTIONS}
 
 Check OpenShift Login Visible
@@ -514,7 +514,7 @@ Dashboard Test Setup
     ...    ${ODH_DASHBOARD_URL}    ${BROWSER.NAME}    ${BROWSER.OPTIONS}
 
 Dashboard Suite Setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
 
 Dashboard Test Teardown

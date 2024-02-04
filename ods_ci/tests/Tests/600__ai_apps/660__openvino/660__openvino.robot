@@ -5,7 +5,7 @@ Resource        ../../../Resources/Page/OCPDashboard/OCPDashboard.resource
 Resource        ../../../Resources/Page/ODH/JupyterHub/ODHJupyterhub.resource
 Resource        ../../../Resources/Page/ODH/AiApps/AiApps.resource
 Resource        ../../../Resources/RHOSi.resource
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 Suite Setup     OpenVino Suite Setup
 Suite Teardown  OpenVino Suite Teardown
 
@@ -47,7 +47,7 @@ Verify Openvino Operator Can Be Installed Using OpenShift Console
 
 *** Keywords ***
 OpenVino Suite Setup
-  Set Library Search Order  SeleniumLibrary
+  Set Library Search Order  SeleniumLibraryToBrowser
   RHOSi Setup
 
 OpenVino Suite Teardown

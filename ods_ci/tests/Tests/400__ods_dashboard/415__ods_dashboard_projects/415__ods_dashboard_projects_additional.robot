@@ -151,7 +151,7 @@ Verify DS Projects Home Page Shows The Right Number Of Items The User Has Select
     Check Pagination Is Correct On The Current Page    page=2    total=20
     Should Be Empty    ${remaining_projects}
     [Teardown]    Run Keywords
-    ...    SeleniumLibrary.Close All Browsers
+    ...    SeleniumLibraryToBrowser.Close All Browsers
     ...    AND
     ...    Delete Multiple Data Science Projects    title=ds-project-ldap-user    number=20
 
@@ -159,7 +159,7 @@ Verify DS Projects Home Page Shows The Right Number Of Items The User Has Select
 Project Suite Setup
     [Documentation]    Suite setup steps for testing DS Projects.
     ...                It creates some test variables and runs RHOSi setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     ${to_delete}=    Create List    ${PRJ_TITLE}
     Set Suite Variable    ${PROJECTS_TO_DELETE}    ${to_delete}
     RHOSi Setup

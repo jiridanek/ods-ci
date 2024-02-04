@@ -9,7 +9,7 @@ Resource         ../../../Resources/RHOSi.resource
 Resource         ../../../Resources/ODS.robot
 Library          ../../../../utils/scripts/ocm/ocm.py
 Library          ../../../../libs/Helpers.py
-Library          SeleniumLibrary
+Library          SeleniumLibraryToBrowser
 Suite Setup      Installation Suite Setup
 Suite Teardown   Installation Suite Teardown
 
@@ -45,7 +45,7 @@ Verify User Can Access RHODS Documentation From OCM Console
 
 *** Keywords ***
 Installation Suite Setup
-  Set Library Search Order    SeleniumLibrary
+  Set Library Search Order    SeleniumLibraryToBrowser
   RHOSi Setup
 
 Installation Suite Teardown

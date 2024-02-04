@@ -332,7 +332,7 @@ Setup Kserve UI Test
     ...                This is likely going to change in the future and it will include a way to skip installation.
     ...                Caikit runtime will be shipped Out-of-the-box and will be removed from here.
     [Arguments]    ${user}=${TEST_USER.USERNAME}    ${pw}=${TEST_USER.PASSWORD}    ${auth}=${TEST_USER.AUTH_TYPE}
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
     Skip If Component Is Not Enabled    kserve
     RHOSi Setup
     Load Expected Responses

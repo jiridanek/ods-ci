@@ -82,7 +82,7 @@ Verify Elyra Pipelines In SDS-Based Images
 *** Keywords ***
 Elyra Pipelines Suite Setup
     [Documentation]    Suite Setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
     Install Red Hat OpenShift Pipelines
 
