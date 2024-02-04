@@ -51,7 +51,7 @@ Verify Ods User Can Bind The Route Role
 General Suite Setup
     [Documentation]    Suite setup steps for testing DSG. It creates some test variables
     ...                and runs RHOSi setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
 
 General Suite Teardown

@@ -44,7 +44,7 @@ Verify Documentation Items Can Be Added Using Odh CRDs
 *** Keywords ***
 Custom Doc Suite Setup
     [Documentation]     Open RHODS Dashboard page and load expected data for custom application
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
     ${dashboard_explore_exp_data}=   Load Expected Test Data
     Set Suite Variable      ${DASH_EXPLORE_EXP_DATA}   ${dashboard_explore_exp_data}

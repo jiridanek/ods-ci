@@ -1,7 +1,7 @@
 *** Settings ***
 Library    OperatingSystem
 Library    String
-Library    SeleniumLibrary
+Library    SeleniumLibraryToBrowser
 Library    ../../../../../libs/Helpers.py
 Resource   ../../../../../tests/Resources/Common.robot
 

@@ -106,7 +106,7 @@ Revert Changes To Access Configuration
 
 Setup Admin UI
     [Documentation]  Customized Steup for admin UI
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
     RHOSi Setup
     Set Standard RHODS Groups Variables
     Set Default Access Groups Settings

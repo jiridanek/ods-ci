@@ -1,6 +1,6 @@
 *** Settings ***
 Resource        ../../Common.robot
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 
 *** Keywords ***
 Is SSO Login Page Visible

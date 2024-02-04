@@ -9,7 +9,7 @@ Resource  ../../Resources/Page/OCPDashboard/OCPDashboard.resource
 Resource  ../../Resources/Page/OCPLogin/OCPLogin.resource
 
 Suite Setup  Set Library Search Order
-...          SeleniumLibrary
+...          SeleniumLibraryToBrowser
 ...          JupyterLibrary
 
 Suite Teardown  Close Browser

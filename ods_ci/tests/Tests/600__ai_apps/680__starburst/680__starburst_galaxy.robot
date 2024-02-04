@@ -1,5 +1,5 @@
 *** Settings ***
-Library             SeleniumLibrary
+Library             SeleniumLibraryToBrowser
 Resource            ../../../Resources/ODS.robot
 Resource            ../../../Resources/Page/ODH/ODHDashboard/ODHDashboard.robot
 Resource            ../../../Resources/RHOSi.resource
@@ -34,7 +34,7 @@ Check Beta Description
     END
 
 Dashboard Test Setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
     Launch Dashboard    ocp_user_name=${TEST_USER.USERNAME}    ocp_user_pw=${TEST_USER.PASSWORD}
     ...    ocp_user_auth_type=${TEST_USER.AUTH_TYPE}    dashboard_url=${ODH_DASHBOARD_URL}    browser=${BROWSER.NAME}

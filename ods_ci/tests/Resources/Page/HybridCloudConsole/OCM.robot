@@ -1,7 +1,7 @@
 *** Settings ***
 Resource        ../../Common.robot
 
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 
 
 *** Keywords ***

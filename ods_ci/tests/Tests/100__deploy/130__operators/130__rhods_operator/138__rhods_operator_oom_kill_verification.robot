@@ -8,7 +8,7 @@ Documentation       RHODS_OPERATOR_OOM_KILL_VERIFICATION
 ...                 | Number    | Required |    Number of namespace to be created |
 
 Library             OperatingSystem
-Library             SeleniumLibrary
+Library             SeleniumLibraryToBrowser
 Resource            ../../../../Resources/Page/ODH/JupyterHub/ODHJupyterhub.resource
 Resource            ../../../../Resources/Page/OCPDashboard/OCPDashboard.resource
 Resource            ../../../../Resources/Common.robot

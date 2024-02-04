@@ -2,7 +2,7 @@
 Documentation       Resource file for aikit operator
 
 Resource           ../JupyterHub/JupyterHubSpawner.robot
-Library             SeleniumLibrary
+Library             SeleniumLibraryToBrowser
 Library             OpenShiftLibrary
 
 

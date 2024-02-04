@@ -112,7 +112,7 @@ Verify JupyterHub Leader Monitoring Using ODS Prometheus
 *** Keywords ***
 Begin Metrics Web Test
     [Documentation]    Test Setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
 
 End Metrics Web Test
     [Documentation]    Test Teardown

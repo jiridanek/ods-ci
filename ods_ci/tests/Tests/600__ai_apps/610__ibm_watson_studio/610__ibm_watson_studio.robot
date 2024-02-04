@@ -2,7 +2,7 @@
 Resource        ../../../Resources/Page/LoginPage.robot
 Resource        ../../../Resources/Page/ODH/ODHDashboard/ODHDashboard.robot
 Resource        ../../../Resources/RHOSi.resource
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 Suite Setup     IBM Watson Studio Suite Setup
 Suite Teardown  IBM Watson Studio Suite Teardown
 
@@ -19,7 +19,7 @@ Verify IBM Watson Studio Is Available In RHODS Dashboard Explore Page
 
 * Keywords ***
 IBM Watson Studio Suite Setup
-  Set Library Search Order  SeleniumLibrary
+  Set Library Search Order  SeleniumLibraryToBrowser
   RHOSi Setup
 
 IBM Watson Studio Suite Teardown

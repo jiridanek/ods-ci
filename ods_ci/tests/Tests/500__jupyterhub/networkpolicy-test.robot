@@ -32,7 +32,7 @@ Test Network Policy Effect
 Open Browser And Start Notebook As First User
     [Documentation]    Opens a Notebook, forcing the creation of the NetworkPolicies
     ...                and leaves it running
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     Open Browser    ${ODH_DASHBOARD_URL}    browser=${BROWSER.NAME}    options=${BROWSER.OPTIONS}
     Login To RHODS Dashboard    ${TEST_USER.USERNAME}    ${TEST_USER.PASSWORD}    ${TEST_USER.AUTH_TYPE}
     Wait For RHODS Dashboard To Load
@@ -54,7 +54,7 @@ Open Browser And Start Notebook As First User
 
 Open Browser And Start Notebook As Second User With Env Vars
     [Documentation]    Opens a second Notebook, with pod details of the first notebook
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     Open Browser    ${ODH_DASHBOARD_URL}    browser=${BROWSER.NAME}    options=${BROWSER.OPTIONS}
     Login To RHODS Dashboard    ${TEST_USER_2.USERNAME}    ${TEST_USER_2.PASSWORD}    ${TEST_USER_2.AUTH_TYPE}
     Wait For RHODS Dashboard To Load

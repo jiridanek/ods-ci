@@ -93,7 +93,7 @@ Verify SPD Metrics Available In CLI For Models Deployed After Enabling Trusty Se
 *** Keywords ***
 Bias Metrics Suite Setup
     [Documentation]    Setup to configure TrustyAI metrics
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     ${to_delete}=    Create List    ${PRJ_TITLE}
     Set Suite Variable    ${PROJECTS_TO_DELETE}    ${to_delete}
     RHOSi Setup

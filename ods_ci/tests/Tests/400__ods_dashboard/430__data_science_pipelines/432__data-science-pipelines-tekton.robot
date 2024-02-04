@@ -82,7 +82,7 @@ End To End Pipeline Workflow Using Kfp Tekton
 
 Data Science Pipelines Suite Setup
     [Documentation]    Data Science Pipelines Suite Setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
     Install Red Hat OpenShift Pipelines
 

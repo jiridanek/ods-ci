@@ -1,5 +1,5 @@
 *** Settings ***
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 Library         RequestsLibrary
 Library         Collections
 Resource        ../../../../Resources/Page/OCPDashboard/OCPDashboard.resource
@@ -45,7 +45,7 @@ Get HTTP Status Code
 
 RHODS Operator Suite Setup
     [Documentation]    Suite setup
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
     RHOSi Setup
 
 RHODS Operator Suite Teardown

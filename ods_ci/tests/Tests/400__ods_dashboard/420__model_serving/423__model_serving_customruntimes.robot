@@ -95,14 +95,14 @@ Verify RHODS Users Can Deploy A Model Using A Custom Serving Runtime
 Custom Serving Runtime Suite Setup
     [Documentation]    Suite setup steps for testing DSG. It creates some test variables
     ...                and runs RHOSi setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
     Fetch CA Certificate If RHODS Is Self-Managed
 
 Custom Serving Runtime Suite Teardown
     Delete Data Science Project From CLI    displayed_name=${PRJ_TITLE}
     Delete Serving Runtime Template From CLI    displayed_name=${UPLOADED_OVMS_DISPLAYED_NAME}
-    SeleniumLibrary.Close All Browsers
+    SeleniumLibraryToBrowser.Close All Browsers
     RHOSi Teardown
 
 Create Test Serving Runtime Template If Not Exists

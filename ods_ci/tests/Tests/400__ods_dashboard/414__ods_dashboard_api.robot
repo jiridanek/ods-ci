@@ -2,7 +2,7 @@
 Documentation     Suite for a basic security test of Dashboard APIs. The tests verifies that user
 ...               reach endpoints based on their user permissions
 Library           OpenShiftLibrary
-Library           SeleniumLibrary
+Library           SeleniumLibraryToBrowser
 Resource          ../../Resources/Common.robot
 Resource          ../../Resources/Page/ODH/ODHDashboard/ODHDashboardAPI.resource
 Resource          ../../Resources/Page/ODH/ODHDashboard/ODHDataScienceProject/Projects.resource
@@ -757,7 +757,7 @@ Verify Access To namespaces API Endpoint
 *** Keywords ***
 Endpoint Testing Setup
     [Documentation]     Fetches an access token for both a RHODS admin and basic user
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
     ${ADMIN_TOKEN}=   Log In As RHODS Admin
     Set Suite Variable    ${ADMIN_TOKEN}

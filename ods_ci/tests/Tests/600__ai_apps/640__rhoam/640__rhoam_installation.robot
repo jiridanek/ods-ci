@@ -5,7 +5,7 @@ Resource        ../../../Resources/Page/ODH/ODHDashboard/ODHDashboard.robot
 Resource        ../../../Resources/Page/ODH/AiApps/Rhoam.resource
 Resource        ../../../Resources/ODS.robot
 Library         ../../../../libs/Helpers.py
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 Library         OpenShiftLibrary
 Suite Setup     RHOAM Install Suite Setup
 Suite Teardown  RHOAM Suite Teardown
@@ -35,7 +35,7 @@ Verify RHODS Can Be Uninstalled When RHOAM Is Installed
 *** Keywords ***
 RHOAM Install Suite Setup
     [Documentation]    RHOAM Suite setup
-    Set Library Search Order  OpenShiftLibrary  SeleniumLibrary
+    Set Library Search Order  OpenShiftLibrary  SeleniumLibraryToBrowser
     Skip If RHODS Is Self-Managed
     ${cluster_id}=   Get Cluster ID
     ${CLUSTER_NAME}=   Get Cluster Name By Cluster ID     cluster_id=${cluster_id}

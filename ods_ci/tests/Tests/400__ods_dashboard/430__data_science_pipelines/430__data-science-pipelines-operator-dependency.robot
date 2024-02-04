@@ -33,7 +33,7 @@ Pipelines Suite Setup
     [Documentation]    Suite setup steps for testing operator availability. It creates some test variables
     ...                and runs RHOSi setup
     RHOSi Setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
 
 Pipelines Suite Teardown
     [Documentation]    Suite setup steps for testing operator availability. It teardown the RHOSi setup

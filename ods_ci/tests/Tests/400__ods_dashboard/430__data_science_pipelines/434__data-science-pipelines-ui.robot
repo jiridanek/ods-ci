@@ -107,7 +107,7 @@ Verify Pipeline Metadata Pods Are Not Deployed When Running Pipelines
 *** Keywords ***
 Pipelines Suite Setup    # robocop: disable
     [Documentation]    Sets global test variables, create a DS project and a data connection
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     # TODO: Install Pipeline only if it does not already installed
     Install Red Hat OpenShift Pipelines
     ${to_delete}=    Create List    ${PRJ_TITLE}

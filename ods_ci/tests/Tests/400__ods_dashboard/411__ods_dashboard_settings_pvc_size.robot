@@ -9,7 +9,7 @@ Documentation       PVC_CHANGE_VERIFICATION
 ...                 | Ns_size   | Required  |   Not Supported PVC size |
 ...                 | Size_code | Required |    Python code to check size in notebook |
 #
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 Library         JupyterLibrary
 Resource        ../../Resources/RHOSi.resource
 Resource        ../../Resources/ODS.robot
@@ -88,7 +88,7 @@ Verify User Cannot Set An Unsupported PVC Size Using The UI
 *** Keywords ***
 Launch RHODS Dashboard
     [Documentation]    Launch RHODS Dashboard
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
     Launch Dashboard   ${TEST_USER.USERNAME}  ${TEST_USER.PASSWORD}  ${TEST_USER.AUTH_TYPE}
     ...   ${ODH_DASHBOARD_URL}  browser=${BROWSER.NAME}  browser_options=${BROWSER.OPTIONS}
 

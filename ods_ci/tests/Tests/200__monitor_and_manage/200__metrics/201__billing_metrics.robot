@@ -10,7 +10,7 @@ Resource            ../../../Resources/Page/ODH/JupyterHub/JupyterHubSpawner.rob
 Resource            ../../../Resources/Page/OCPLogin/OCPLogin.resource
 Resource            ../../../Resources/OCP.resource
 Library             JupyterLibrary
-Library             SeleniumLibrary
+Library             SeleniumLibraryToBrowser
 
 Suite Setup         Billing Metrics Suite Setup
 Suite Teardown      RHOSi Teardown
@@ -66,14 +66,14 @@ Test Metric "Rhods_Aggregate_Availability" On Cluster Monitoring Prometheus
     ...    query=rhods_aggregate_availability   username=${OCP_ADMIN_USER.USERNAME}   password=${OCP_ADMIN_USER.PASSWORD}
     ...    auth_type=${OCP_ADMIN_USER.AUTH_TYPE}    retry_attempts=1    return_zero_if_result_empty=False
 
-    SeleniumLibrary.Capture Page Screenshot
+    SeleniumLibraryToBrowser.Capture Page Screenshot
 
     Should Not Be Empty    ${value_openshift_observe}
     ...    msg=Metric rhods_aggregate_availability is empty in OpenShift>Observe>Metrics
 
     ${value_prometheus} =    Fire Query On RHODS Prometheus And Return Value    query=rhods_aggregate_availability
     Should Be Equal    ${value_prometheus}    ${value_openshift_observe}
-    [Teardown]    SeleniumLibrary.Close All Browsers
+    [Teardown]    SeleniumLibraryToBrowser.Close All Browsers
 
 Test Metric "Active_Users" On OpenShift Monitoring On Cluster Monitoring Prometheus
     [Documentation]    Test launchs notebook for N user and and checks Openshift Matrics showing N active users
@@ -122,7 +122,7 @@ Test Metric "Active Notebook Pod Time" On OpenShift Monitoring - Cluster Monitor
 
 *** Keywords ***
 Billing Metrics Suite Setup
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
     RHOSi Setup
 
 CleanUp JupyterHub And Close All Browsers
@@ -131,7 +131,7 @@ CleanUp JupyterHub And Close All Browsers
 
 Test Setup For Matrics Web Test
     [Documentation]     Opens openshift console metrics for metrics test
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     Open OCP Console
     Login To OCP
     Wait Until OpenShift Console Is Loaded

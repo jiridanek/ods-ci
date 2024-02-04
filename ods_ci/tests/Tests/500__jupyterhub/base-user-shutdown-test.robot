@@ -24,7 +24,7 @@ Verify Base User Can Stop A Running Server
 *** Keywords ***
 Setup
     [Documentation]    Suite setup keyword
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
 
 Launch KFNBC Spawner As Base User

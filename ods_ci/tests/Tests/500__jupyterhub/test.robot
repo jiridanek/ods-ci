@@ -91,7 +91,7 @@ Can Spawn Notebook
 
 *** Keywords ***
 JupyterHub Testing Suite Setup
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
     RHOSi Setup
 
 Delete Last Pytorch Build

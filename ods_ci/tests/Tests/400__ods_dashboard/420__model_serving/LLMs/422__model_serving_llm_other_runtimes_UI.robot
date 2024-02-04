@@ -85,7 +85,7 @@ Non-Admin Setup Kserve UI Test
     ...                This is likely going to change in the future and it will include a way to skip installation.
     ...                Caikit runtime will be shipped Out-of-the-box and will be removed from here.
     [Arguments]    ${user}=${TEST_USER_3.USERNAME}    ${pw}=${TEST_USER_3.PASSWORD}    ${auth}=${TEST_USER_3.AUTH_TYPE}
-    Set Library Search Order  SeleniumLibrary
+    Set Library Search Order  SeleniumLibraryToBrowser
     Skip If Component Is Not Enabled    kserve
     RHOSi Setup
     Load Expected Responses
@@ -100,5 +100,5 @@ Non-Admin Teardown Kserve UI Test
     Delete Data Science Project   project_title=${TEST_NS}
     # if UI deletion fails it will try deleting from CLI
     Delete Data Science Projects From CLI   ocp_projects=${PROJECTS_TO_DELETE}
-    SeleniumLibrary.Close All Browsers
+    SeleniumLibraryToBrowser.Close All Browsers
     RHOSi Teardown

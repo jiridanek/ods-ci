@@ -148,7 +148,7 @@ Verify Custom Runtime Exists After Upgrade
 *** Keywords ***
 Dashboard Suite Setup
     [Documentation]  Basic suite setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
 
 Dashboard Test Teardown

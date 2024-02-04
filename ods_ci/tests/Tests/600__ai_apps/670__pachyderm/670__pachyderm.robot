@@ -1,5 +1,5 @@
 *** Settings ***
-Library             SeleniumLibrary
+Library             SeleniumLibraryToBrowser
 Resource            ../../../Resources/Page/OCPLogin/OCPLogin.resource
 Resource            ../../../Resources/OCP.resource
 Resource            ../../../Resources/Page/ODH/AiApps/AiApps.resource
@@ -40,7 +40,7 @@ Verify Pachyderm Pipeline Can Be Created
 
 *** Keywords ***
 Pachyderm Suite Setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
     Open OCP Console
     Login to OCP

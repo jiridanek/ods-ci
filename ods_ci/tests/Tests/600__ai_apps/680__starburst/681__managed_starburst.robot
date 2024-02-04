@@ -110,7 +110,7 @@ Verify User Cannot Access Web UI With Invalid License
 *** Keywords ***
 Starburst Setup Suite
     [Documentation]    Setup for Managed Staburst Test Suite
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     RHOSi Setup
 
 Get Original License Secret

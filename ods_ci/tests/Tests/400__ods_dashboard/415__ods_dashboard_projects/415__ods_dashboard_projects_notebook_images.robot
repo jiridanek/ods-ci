@@ -1,6 +1,6 @@
 *** Settings ***
 Documentation      Suite to test the spawn of different notebook images
-Library            SeleniumLibrary
+Library            SeleniumLibraryToBrowser
 Library            OpenShiftLibrary
 Resource           ../../../Resources/Page/ODH/ODHDashboard/ODHDataScienceProject/Projects.resource
 Resource           ../../../Resources/Page/ODH/ODHDashboard/ODHDataScienceProject/Workbenches.resource
@@ -46,7 +46,7 @@ Verify User Can Create A Workbench Using Intel AiKit Image
 Project Suite Setup
     [Documentation]    Suite setup steps for testing DS Projects. It creates some test variables
     ...                and runs RHOSi setup
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     ${to_delete}    Create List    ${PRJ_TITLE}
     Set Suite Variable    ${PROJECTS_TO_DELETE}    ${to_delete}
     RHOSi Setup

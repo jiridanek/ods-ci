@@ -1,7 +1,7 @@
 *** Settings ***
 Documentation       Resource file for pachyderm operator
 Resource            ../JupyterHub/JupyterLabLauncher.robot
-Library             SeleniumLibrary
+Library             SeleniumLibraryToBrowser
 
 
 *** Keywords ***

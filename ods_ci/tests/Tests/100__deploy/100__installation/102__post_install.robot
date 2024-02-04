@@ -316,7 +316,7 @@ Delete Dashboard Pods And Wait Them To Be Back
 
 Test Setup For Rhods Dashboard
     [Documentation]    Test Setup for Rhods Dashboard
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     Launch Dashboard  ocp_user_name=${TEST_USER.USERNAME}  ocp_user_pw=${TEST_USER.PASSWORD}  ocp_user_auth_type=${TEST_USER.AUTH_TYPE}
     ...               dashboard_url=${ODH_DASHBOARD_URL}  browser=${BROWSER.NAME}  browser_options=${BROWSER.OPTIONS}
 
@@ -437,7 +437,7 @@ CUDA Teardown
 
 Launch Notebook And Stop It    # robocop: disable
     [Documentation]    Opens a Notebook, forcing the creation of the NetworkPolicies
-    Set Library Search Order    SeleniumLibrary
+    Set Library Search Order    SeleniumLibraryToBrowser
     Open Browser    ${ODH_DASHBOARD_URL}    browser=${BROWSER.NAME}    options=${BROWSER.OPTIONS}
     Login To RHODS Dashboard    ${TEST_USER.USERNAME}    ${TEST_USER.PASSWORD}    ${TEST_USER.AUTH_TYPE}
     Wait For RHODS Dashboard To Load

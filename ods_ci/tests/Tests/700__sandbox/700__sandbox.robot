@@ -4,7 +4,7 @@ Resource        ../../Resources/Common.robot
 Resource        ../../Resources/Page/ODH/ODHDashboard/ODHDashboard.resource
 Resource        ../../Resources/Page/ODH/JupyterHub/ODHJupyterhub.resource
 Library         String
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 Suite Setup     Begin Web Test
 Suite Teardown  End Web Test
 

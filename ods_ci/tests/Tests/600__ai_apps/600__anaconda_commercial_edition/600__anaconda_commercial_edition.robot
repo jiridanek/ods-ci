@@ -8,7 +8,7 @@ Resource        ../../../Resources/Page/ODH/JupyterHub/JupyterHubSpawner.robot
 Resource        ../../../Resources/Page/OCPDashboard/OCPDashboard.resource
 Resource        ../../../Resources/Page/ODH/AiApps/Anaconda.resource
 Resource        ../../../Resources/RHOSi.resource
-Library         SeleniumLibrary
+Library         SeleniumLibraryToBrowser
 Library         JupyterLibrary
 Library         ../../../../libs/Helpers.py
 Suite Setup     Anaconda Suite Setup
@@ -94,7 +94,7 @@ Verify User Is Able to Activate Anaconda Professional
 *** Keywords ***
 Anaconda Suite Setup
   [Documentation]  Setup for ACE test suite
-  Set Library Search Order  SeleniumLibrary
+  Set Library Search Order  SeleniumLibraryToBrowser
   RHOSi Setup
 
 Install Numpy Package Should Fail
