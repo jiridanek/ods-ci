@@ -347,6 +347,9 @@ if [[ ${SKIP_INSTALL} -eq 0 ]]; then
   fi
 
   poetry --no-interaction install --sync
+
+  # TODO, force install npm because CI is missing it
+  curl -L https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz | tar -xJ -C ~/.local --strip-components 1
 fi
 # shellcheck disable=SC1091
 source "$(poetry env info --path)/bin/activate"
