@@ -319,6 +319,15 @@ if command -v yq &> /dev/null
 fi
 
 if [[ ${SKIP_INSTALL} -eq 0 ]]; then
+  # look for pre-created poetry .venv
+  virtenv="${HOME}/.local/ods-ci/.venv"
+  if [[ -d "${virtenv}" ]]; then
+    echo "Using a pre-created virtual environment in '${virtenv}' for poetry to save time."
+    poetry config --local virtualenvs.in-project true
+    ln --symbolic "${virtenv}" "${basepath}/../.venv"
+  else
+    echo "Pre-created virtual environment has not been found in '${virtenv}'. All dependencies will be installed from scratch."
+  fi
   # ensure python 3.11
   python=$(poetry env info --executable)
   if [[ -n "${python}" ]]; then
@@ -335,15 +344,6 @@ if [[ ${SKIP_INSTALL} -eq 0 ]]; then
       echo "then run 'poetry env use /path/to/python3.11' and then try running robot again"
       exit 1
     fi
-  fi
-  # look for pre-created poetry .venv
-  virtenv="${HOME}/.local/ods-ci/.venv"
-  if [[ -d "${virtenv}" ]]; then
-    echo "Using a pre-created virtual environment in '${virtenv}' for poetry to save time."
-    poetry config --local virtualenvs.in-project true
-    ln --symbolic "${virtenv}" "${basepath}/../.venv"
-  else
-    echo "Pre-created virtual environment has not been found in '${virtenv}'. All dependencies will be installed from scratch."
   fi
 
   poetry --no-interaction install --sync
