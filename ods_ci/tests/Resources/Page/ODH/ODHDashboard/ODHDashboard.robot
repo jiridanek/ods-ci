@@ -7,6 +7,7 @@ Resource      ../../../Page/ODH/ODHDashboard/ResourcesPage.resource
 Resource      ../../../Page/ODH/ODHDashboard/ODHDashboardSettings.resource
 Resource    ../../../OCP.resource
 Library       JupyterLibrary
+Library       Browser
 
 
 *** Variables ***
@@ -73,7 +74,13 @@ Login To RHODS Dashboard
    Wait Until Page Contains A String In List    ${expected_text_list}
 
    ${oauth_prompt_visible} =  Is OpenShift OAuth Login Prompt Visible
-   IF  ${oauth_prompt_visible}  Click Button  Log in with OpenShift
+   IF  ${oauth_prompt_visible}
+       Click Button  Log in with OpenShift
+       #    Browser.Wait For Navigation    url=/oauth-opeshift.apps/  wait_until=load
+       Browser.Wait For Function    document.readyState == "complete"
+   END
+   # TODO hack
+   Browser.Set Strict Mode    False
    ${login-required} =  Is OpenShift Login Visible
    IF  ${login-required}  Login To Openshift  ${ocp_user_name}  ${ocp_user_pw}  ${ocp_user_auth_type}
    ${authorize_service_account} =  Is rhods-dashboard Service Account Authorization Required
