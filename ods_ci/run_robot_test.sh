@@ -349,9 +349,13 @@ if [[ ${SKIP_INSTALL} -eq 0 ]]; then
   poetry --no-interaction install --sync
 
   # TODO, force install npm because CI is missing it
-#  curl -L https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz | tar -xJ -C ~/.local --strip-components 1
+  #curl -L https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz | tar -xJ -C ~/.local --strip-components 1
   curl -L https://github.com/jiridanek/ods-ci/releases/download/v1/node-v20.11.0-linux-x64.tar.gz | tar -xz -C ~/.local --strip-components 1
   poetry run rfbrowser init chromium
+
+  # TODO, rewrite test-variables.yaml to specify browser args as a list of strings and not a string
+  poetry run python ${basepath}/rewrite_browser_args.py < "${TEST_VARIABLES_FILE}" > "${TEST_VARIABLES_FILE}.new"
+  mv "${TEST_VARIABLES_FILE}.new" "${TEST_VARIABLES_FILE}"
 fi
 # shellcheck disable=SC1091
 source "$(poetry env info --path)/bin/activate"
