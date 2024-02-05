@@ -321,7 +321,7 @@ fi
 if [[ ${SKIP_INSTALL} -eq 0 ]]; then
   # ensure python 3.11
   python=$(poetry env info --executable)
-  if [[ -z "${python}" ]]; then
+  if [[ -n "${python}" ]]; then
     echo "Python ${python} will be used"
   else
     echo "Python ${python} is not of the correct version"
