@@ -2,7 +2,7 @@
 ODS-CI is a framework to test [Red Hat Open Data Science](https://www.redhat.com/en/technologies/cloud-computing/openshift/openshift-data-science)
 and its upstream project, [Open Data Hub](https://opendatahub.io/).
 
-# Requirements
+# Requirements FFF
   1. Linux distribution that supports Selenium automation on top of either a Chromium/Google-Chrome web browser using [ChromeDriver](https://chromedriver.chromium.org) or Firefox web browser using [geckodriver](https://github.com/mozilla/geckodriver):
      * relevant web driver binaries can be downloaded here: [ChromeDriver](https://googlechromelabs.github.io/chrome-for-testing) or [geckodriver](https://github.com/mozilla/geckodriver/releases)
      * the `ChromeDriver` version must match the installed version of Chromium/Google-Chrome, for `geckodriver` see the release notes for particular release
