@@ -333,6 +333,7 @@ She cannot use the old password anymore
 
 
 def format_functionname(name: str) -> str:
+    name = name.lower()
     name = name.translate(str.maketrans(' -', '__', '"'))
     return name
 
@@ -473,7 +474,8 @@ class SuiteRunner(SuiteVisitor):
             # todo have to namespace these
             self.userkeywords[fname] = cw.buffer.getvalue()
 
-            if "gather" in keyword.name:
+            # if "gather" in keyword.name:
+            if "Add and Run JupyterLab Code Cell" in keyword.name:
                 print("baf")
 
         for keyword in suite.resource.keywords:
