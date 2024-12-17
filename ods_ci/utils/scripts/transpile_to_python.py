@@ -362,6 +362,11 @@ def format_argument(value: str) -> str:
         return value
     return f"'{value}'"
 
+def format_condition(expression: str) -> str:
+    # negative lookahead for escaped $, todo: add this everywhere, and single regex?
+    expression = re.sub(r'(?!\\)[$&@]\{([^}]+)}', r'\1', expression)
+    expression = re.sub(r'(?!\\)[$&@](\w+)', r'\1', expression)
+    return expression
 
 class CodeWriter():
     def __init__(self):
@@ -553,9 +558,9 @@ class SuiteRunner(SuiteVisitor):
                             case robot.running.model.IfBranch():
                                 print("ifbranch", y.type, y.condition, y.body)
                                 if y.type == "IF":
-                                    cw.begin(f"if {y.condition}:")
+                                    cw.begin(f"if {format_condition(y.condition)}:")
                                 elif y.type == "ELSE IF":
-                                    cw.begin(f"elif {y.condition}:")
+                                    cw.begin(f"elif {format_condition(y.condition)}:")
                                 elif y.type == "ELSE":
                                     cw.begin(f"else:")
                                 else:
@@ -588,7 +593,7 @@ class SuiteRunner(SuiteVisitor):
                     cw.end()
                 case robot.running.model.While():
                     x: robot.running.model.While
-                    cw.begin(f"while {x.condition}:")
+                    cw.begin(f"while {format_condition(x.condition)}:")
                     self.translate_body(x.body, cw)
                     cw.end()
                 case x if isinstance(x, robot.running.Try) or isinstance(x, robot.running.model.Try):
