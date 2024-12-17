@@ -364,8 +364,9 @@ def format_argument(value: str) -> str:
 
 def format_condition(expression: str) -> str:
     # negative lookahead for escaped $, todo: add this everywhere, and single regex?
-    expression = re.sub(r'(?!\\)[$&@]\{([^}]+)}', r'\1', expression)
-    expression = re.sub(r'(?!\\)[$&@](\w+)', r'\1', expression)
+    # also doing the quotes removal
+    expression = re.sub(r'(?P<q>"?)(?!\\)[$&@]\{([^}]+)}(?P=q)', r'\2', expression)
+    expression = re.sub(r'(?P<q>"?)(?!\\)[$&@](\w+)(?P=q)', r'\2', expression)
     return expression
 
 class CodeWriter():
@@ -502,7 +503,8 @@ class SuiteRunner(SuiteVisitor):
 
     def visit_test(self, test: robot.running.model.TestCase):
         cw = CodeWriter()
-        cw.begin(f"def {test.name.replace(' ', '_')}():")
+        test_function_name = "test_" + format_functionname(test.name)
+        cw.begin(f"def {test_function_name}():")
 
         print(f"Visiting test '{test.name}' {type(test.body)}")
         body: robot.running.model.Body = test.body
@@ -513,20 +515,21 @@ class SuiteRunner(SuiteVisitor):
 
         cw.print()
 
-    def visit_keyword(self, keyword: robot.running.model.Keyword):
-        if not hasattr(keyword, 'body'):
-            return
-        cw = CodeWriter()
-        cw.begin(f"def {keyword.name.replace(' ', '_')}():")
-
-        print(f"Visiting keyword '{keyword.name}' {type(keyword.body)}")
-        body: robot.running.model.Body = keyword.body
-
-        self.translate_body(body, cw)
-        cw.end()
-        self.generated_test_methods.append(cw.buffer.getvalue())
-
-        cw.print()
+    # def visit_keyword(self, keyword: robot.running.model.Keyword):
+    #     if not hasattr(keyword, 'body'):
+    #         return
+    #     cw = CodeWriter()
+    #
+    #
+    #
+    #     print(f"Visiting keyword '{keyword.name}' {type(keyword.body)}")
+    #     body: robot.running.model.Body = keyword.body
+    #
+    #     self.translate_body(body, cw)
+    #     cw.end()
+    #     self.generated_test_methods.append(cw.buffer.getvalue())
+    #
+    #     cw.print()
 
     def translate_body(self, body: robot.running.model.Body, cw: CodeWriter):
         for x in body:
