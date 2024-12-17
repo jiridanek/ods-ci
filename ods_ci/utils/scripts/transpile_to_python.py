@@ -23,6 +23,7 @@ import pathlib
 import re
 import shutil
 import unittest
+import unittest.mock
 
 import robot.running.namespace
 from robot.model import SuiteVisitor
@@ -341,7 +342,7 @@ def format_assignment(value: str) -> str:
     raise ValueError(value)
 
 def format_variable(value: str) -> str:
-    """variable or actually variable expression
+    """variable or actually a variable expression
 
     such as `@{DICTIONARY}[classifiers]`
     """
@@ -407,11 +408,73 @@ class SuiteRunner(SuiteVisitor):
         self.testsuite.visit(self)
 
     def start_suite(self, suite: robot.running.model.TestSuite):
-        # settings = robot.conf.settings.RobotSettings()
-        # variables = robot.variables.scopes.VariableScopes(settings)
-        # ns = robot.running.namespace.Namespace(variables, suite, suite.resource, languages=None)
+        settings = robot.conf.settings.RobotSettings()
+        variables = robot.variables.scopes.VariableScopes(settings)
+        ns = robot.running.namespace.Namespace(variables, suite, suite.resource, languages=None)
+
+        robot.running.context.EXECUTION_CONTEXTS.start_suite(suite, ns, unittest.mock.Mock(), dry_run=True)
+        variables.start_suite()
+        ns.start_suite()
+
         print(suite.resource.variables)
         print(f"Starting suite '{suite.name}'")
+
+        for imp in suite.resource.imports:
+            imp: robot.running.model.Import
+            match imp.type:
+                case "RESOURCE":
+                    if "MustGather" in imp.name:
+                        print("baf")
+                    target = imp.directory / imp.name
+                    ns.import_resource(target)
+                case "LIBRARY":
+                    pass
+                    # target = imp.directory / imp.name
+                    # ns.import_library(target)
+                case default:
+                    raise Exception(f"'{imp.type}' is an unexpected resource type")
+            print(f"  Import '{imp.name}'")
+
+        # these are python libraries, essentially
+        for libname, libvalue in ns.libraries.mapping.items():
+            print("libname", libname, libvalue)
+            name = "getwebelement"  ## normalized names
+            if libvalue.handlers_for(name):
+                print(f"Library '{libname}' has a handler for {name}")
+
+        # we may not have undefined variables
+        variables.set_local_variable("${AWS_ACCESS_KEY_ID}", "fake")
+        variables.set_local_variable("${AWS_SECRET_ACCESS_KEY}", "fake")
+        variables.set_local_variable("${AWS_BUCKET}", "fake")
+        variables.set_local_variable("${MODELS_BUCKET}", "fake")
+        variables.set_local_variable("${AWS_STORAGE_BUCKET}", "fake")
+        variables.set_local_variable("${AWS_DEFAULT_ENDPOINT}", "fake")
+
+        variables.set_local_variable("${NOTEBOOK_USER_NAME}", "fake")
+        variables.set_local_variable("${NOTEBOOK_USER_PASSWORD}", "fake")
+        variables.set_local_variable("${PIP_INDEX_URL}", "fake")
+        variables.set_local_variable("${PIP_TRUSTED_HOST}", "fake")
+        # here are the variables from the imported files, the values are interpolated
+        for variable, variablevalue in variables.as_dict().items():
+            print(f"variable '{variable}'", variablevalue)
+
+        # user_keywords: robot.running.userkeyword.UserLibrary = ns._kw_store.user_keywords
+        # for keyword in user_keywords.handlers:
+        user_keywords: list[robot.running.userkeyword.UserLibrary] = ns._kw_store.resources.values()
+        for keyword in (kw for handlers in user_keywords for kw in handlers.handlers):
+            keyword: robot.running.userkeyword.UserKeywordHandler
+            print(keyword)
+            # if not hasattr(keyword, "body"):
+            #     continue
+            cw = CodeWriter()
+            fname = format_functionname(keyword.name)
+            cw.begin(f"def {fname}(*args, **kwargs):")
+            self.translate_body(keyword.body, cw)
+            # todo have to namespace these
+            self.userkeywords[fname] = cw.buffer.getvalue()
+
+            if "gather" in keyword.name:
+                print("baf")
 
         for keyword in suite.resource.keywords:
             cw = CodeWriter()
@@ -420,7 +483,13 @@ class SuiteRunner(SuiteVisitor):
             self.translate_body(keyword.body, cw)
             self.userkeywords[fname] = cw.buffer.getvalue()
 
+            if keyword.name == "Get must-gather Logs":
+                print("baf")
+
+            self.userkeywords[fname] = cw.buffer.getvalue()
+
     def end_suite(self, suite: robot.running.model.TestSuite):
+        robot.running.context.EXECUTION_CONTEXTS.end_suite()
         print(f"Ending suite '{suite.name}'")
         return "b"
 
@@ -556,6 +625,10 @@ class SuiteRunner(SuiteVisitor):
                     #     cw.end()
                 case robot.running.model.Return():
                     cw.add("return 'something'")
+                case robot.running.model.Break():
+                    cw.add("break")
+                case robot.running.model.Continue():
+                    cw.add("continue")
                 case default:
                     raise Exception(f"default {type(x)}")
 
