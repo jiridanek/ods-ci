@@ -229,9 +229,17 @@ class TestGetSuite(unittest.TestCase):
     def test_build_suite(self):
         REPO_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
         builder = TestSuiteBuilder()
-        testsuite = builder.build(REPO_ROOT / "ods_ci" / "tests/")
+        # testsuite = builder.build(REPO_ROOT / "ods_ci" / "tests/")
+        testsuite = builder.build(REPO_ROOT / "ods_ci")
 
-        SuiteRunner(testsuite).run()
+        # testsuite.run()
+
+        runner = SuiteRunner(testsuite)
+        runner.run()
+        code = runner.get_python_code()
+        assert len(code) > 42
+
+        print(code)
 
     def test_quickstart_example1(self):
         """https://github.com/robotframework/QuickStartGuide/blob/master/QuickStart.rst#workflow-tests"""
@@ -246,7 +254,7 @@ User cannot log in with bad password
     Attempt to Login with Credentials    betty    wrong
     Status Should Be    Access Denied"""
 
-        testsuite = suite = robot.api.TestSuite.from_string(sources)
+        testsuite = robot.api.TestSuite.from_string(sources)
         runner = SuiteRunner(testsuite)
         runner.run()
 
@@ -262,6 +270,66 @@ def User_cannot_log_in_with_bad_password():
     Status_Should_Be('Access Denied')
 """
 
+    def test_quickstart_parameterized1(self):
+        """https://github.com/robotframework/QuickStartGuide/blob/master/QuickStart.rst#data-driven-tests"""
+        sources = """*** Test Cases ***
+Invalid password
+    [Template]    Creating user with invalid password should fail
+    abCD5            ${PWD INVALID LENGTH}
+    abCD567890123    ${PWD INVALID LENGTH}
+    123DEFG          ${PWD INVALID CONTENT}
+    abcd56789        ${PWD INVALID CONTENT}
+    AbCdEfGh         ${PWD INVALID CONTENT}
+    abCD56+          ${PWD INVALID CONTENT}
+"""
+
+        testsuite = robot.api.TestSuite.from_string(sources)
+        runner = SuiteRunner(testsuite)
+        runner.run()
+
+    def test_quickstart_userkeywords1(self):
+        """https://github.com/robotframework/QuickStartGuide/blob/master/QuickStart.rst#user-keywords"""
+        sources = """*** Keywords ***
+Clear login database
+    Remove file    ${DATABASE FILE}
+
+Create valid user
+    [Arguments]    ${username}    ${password}
+    Create user    ${username}    ${password}
+    Status should be    SUCCESS
+
+Creating user with invalid password should fail
+    [Arguments]    ${password}    ${error}
+    Create user    example    ${password}
+    Status should be    Creating user failed: ${error}
+
+Login
+    [Arguments]    ${username}    ${password}
+    Attempt to login with credentials    ${username}    ${password}
+    Status should be    Logged In
+
+# Keywords below used by higher level tests. Notice how given/when/then/and
+# prefixes can be dropped. And this is a comment.
+
+A user has a valid account
+    Create valid user    ${USERNAME}    ${PASSWORD}
+
+She changes her password
+    Change password    ${USERNAME}    ${PASSWORD}    ${NEW PASSWORD}
+    Status should be    SUCCESS
+
+She can log in with the new password
+    Login    ${USERNAME}    ${NEW PASSWORD}
+
+She cannot use the old password anymore
+    Attempt to login with credentials    ${USERNAME}    ${PASSWORD}
+    Status should be    Access Denied"""
+
+        testsuite = robot.api.TestSuite.from_string(sources)
+        runner = SuiteRunner(testsuite)
+        runner.run()
+
+
 
 def format_functionname(name: str) -> str:
     name = name.translate(str.maketrans(' -', '__', '"'))
@@ -270,6 +338,15 @@ def format_functionname(name: str) -> str:
 def format_assignment(value: str) -> str:
     if (m := re.match(r'^[$@&]\{([^{]+)}\s*=?\s*$', value)) is not None:
         return m.group(1)
+    raise ValueError(value)
+
+def format_variable(value: str) -> str:
+    """variable or actually variable expression
+
+    such as `@{DICTIONARY}[classifiers]`
+    """
+    if (m := re.match(r'^[$@&]\{([^{]+)}(.*)$', value)) is not None:
+        return m.group(1) + m.group(2)
     raise ValueError(value)
 
 def format_argument(value: str) -> str:
@@ -304,23 +381,44 @@ class CodeWriter():
 
 
 class SuiteRunner(SuiteVisitor):
-    def __init__(self, testsuite):
+    def __init__(self, testsuite: robot.running.model.TestSuite):
         self.testsuite = testsuite
+
+        self.usedkeywords = set()
+        self.userkeywords = {}
         self.generated_test_methods: list[str] = []
 
-    def get_python_code(self):
-        return '\n\n'.join(self.generated_test_methods)
+    def get_python_code(self) -> str:
+        code = ""
+        for kw in self.usedkeywords:
+            if kw in self.userkeywords:
+                if code:
+                    code += "\n\n"
+                code += self.userkeywords[kw]
+            else:
+                print(f"keyword not found in userdefined {kw}")
+        if code:
+            code += "\n\n"
+        code += '\n\n'.join(self.generated_test_methods)
+
+        return code
 
     def run(self):
         self.testsuite.visit(self)
 
     def start_suite(self, suite: robot.running.model.TestSuite):
-        settings = robot.conf.settings.RobotSettings()
-        variables = robot.variables.scopes.VariableScopes(settings)
-        ns = robot.running.namespace.Namespace(variables, suite, suite.resource, languages=None)
+        # settings = robot.conf.settings.RobotSettings()
+        # variables = robot.variables.scopes.VariableScopes(settings)
+        # ns = robot.running.namespace.Namespace(variables, suite, suite.resource, languages=None)
         print(suite.resource.variables)
         print(f"Starting suite '{suite.name}'")
-        return "a"
+
+        for keyword in suite.resource.keywords:
+            cw = CodeWriter()
+            fname = format_functionname(keyword.name)
+            cw.begin(f"def {fname}(*args, **kwargs):")
+            self.translate_body(keyword.body, cw)
+            self.userkeywords[fname] = cw.buffer.getvalue()
 
     def end_suite(self, suite: robot.running.model.TestSuite):
         print(f"Ending suite '{suite.name}'")
@@ -358,9 +456,11 @@ class SuiteRunner(SuiteVisitor):
         for x in body:
             match x:
                 case robot.running.model.Keyword():
-                    print("keyword", x.body if hasattr(x, 'body') else "")
                     x: robot.running.model.Keyword
                     name = format_functionname(x.name)
+
+                    self.usedkeywords.add(format_functionname(name))
+
                     args = []
                     kwargs = {}
                     for arg in x.args:
@@ -395,7 +495,67 @@ class SuiteRunner(SuiteVisitor):
                                 cw.end()
 
                 case robot.running.model.For():
+                    x: robot.running.model.For
                     print("for")
+                    variables = ', '.join(format_variable(v) for v in x.variables)
+                    match x.flavor:
+                        case "IN":
+                            values = ', '.join(format_variable(v) for v in x.values)
+                            cw.begin(f"for {variables} in {values}:")
+                        case "IN ENUMERATE":
+                            values = ', '.join(format_variable(v) for v in x.values)
+                            if x.start:
+                                cw.begin(f"for {variables} in enumerate({values}, start={x.start}):")
+                            else:
+                                cw.begin(f"for {variables} in enumerate({values}):")
+                        case "IN RANGE":
+                            values = ', '.join(x.values)
+                            cw.begin(f"for {variables} in range({values}):")
+                        case default:
+                            raise Exception(f"Unexpected for '{x.flavor}'")
+                    self.translate_body(x.body, cw)
+                    cw.end()
+                case robot.running.model.While():
+                    x: robot.running.model.While
+                    cw.begin(f"while {x.condition}:")
+                    self.translate_body(x.body, cw)
+                    cw.end()
+                case x if isinstance(x, robot.running.Try) or isinstance(x, robot.running.model.Try):
+                    x: robot.running.model.Try
+                    for y in x.body:
+                        match y:
+                            case robot.running.TryBranch():
+                                y: robot.running.TryBranch
+                                print("trybranch", y.type, y.patterns, y.body)
+                                if y.type == "TRY":
+                                    cw.begin(f"try:")
+                                elif y.type == "EXCEPT":
+                                    cw.begin(f"except {y.patterns}:")
+                                elif y.type == "ELSE":
+                                    cw.begin(f"else:")
+                                elif y.type == "FINALLY":
+                                    cw.begin(f"finally:")
+                                else:
+                                    raise Exception(f"Unexpected try pattern type '{y.type}'")
+                                self.translate_body(y.body, cw)
+                                cw.end()
+                            case default:
+                                raise Exception(f"Unexpected try pattern type '{y.type}'")
+
+                    # for y in x.except_branches:
+                    #     cw.begin(f"except {y.patterns}:")
+                    #     self.translate_body(y.body, cw)
+                    #     cw.end()
+                    # if x.else_branch:
+                    #     cw.begin(f"else:")
+                    #     self.translate_body(x.else_branch, cw)
+                    #     cw.end()
+                    # if x.finally_branch:
+                    #     cw.begin(f"finally:")
+                    #     self.translate_body(x.finally_branch, cw)
+                    #     cw.end()
+                case robot.running.model.Return():
+                    cw.add("return 'something'")
                 case default:
                     raise Exception(f"default {type(x)}")
 
