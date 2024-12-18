@@ -657,7 +657,7 @@ class SuiteRunner(SuiteVisitor):
                             else:
                                 cw.begin(f"for {variables} in enumerate({values}):")
                         case "IN RANGE":
-                            values = ', '.join(x.values)
+                            values = ', '.join(format_variable(v) if v[0] in '$@&' else format_argument(v) for v in x.values)
                             cw.begin(f"for {variables} in range({values}):")
                         case default:
                             raise Exception(f"Unexpected for '{x.flavor}'")
