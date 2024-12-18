@@ -18,6 +18,7 @@ Done. Found 14 new tests in master which were not present in origin/releases/2.9
 
 import argparse
 import io
+import math
 import os
 import pathlib
 import re
@@ -260,16 +261,16 @@ User cannot log in with bad password
         runner = SuiteRunner(testsuite)
         runner.run()
 
-        assert runner.get_python_code() == """def User_can_create_an_account_and_log_in():
-    Create_Valid_User('fred', 'P4ssw0rd')
-    Attempt_to_Login_with_Credentials('fred', 'P4ssw0rd')
-    Status_Should_Be('Logged In')
+        assert runner.get_python_code() == """def test_user_can_create_an_account_and_log_in():
+    create_valid_user('fred', 'P4ssw0rd')
+    attempt_to_login_with_credentials('fred', 'P4ssw0rd')
+    status_should_be('Logged In')
 
 
-def User_cannot_log_in_with_bad_password():
-    Create_Valid_User('betty', 'P4ssw0rd')
-    Attempt_to_Login_with_Credentials('betty', 'wrong')
-    Status_Should_Be('Access Denied')
+def test_user_cannot_log_in_with_bad_password():
+    create_valid_user('betty', 'P4ssw0rd')
+    attempt_to_login_with_credentials('betty', 'wrong')
+    status_should_be('Access Denied')
 """
 
     def test_quickstart_parameterized1(self):
@@ -331,6 +332,17 @@ She cannot use the old password anymore
         runner = SuiteRunner(testsuite)
         runner.run()
 
+def test_named_args():
+    sources = """*** Test Cases ***
+Verify something
+    Perform Dashboard API Endpoint PUT Call   endpoint=${CM_ENDPOINT_PT0}"""
+    testsuite = robot.api.TestSuite.from_string(sources)
+    runner = SuiteRunner(testsuite)
+    runner.run()
+
+    assert runner.get_python_code() == """def test_verify_something():
+    perform_dashboard_api_endpoint_put_call(endpoint=CM_ENDPOINT_PT0)
+"""
 
 
 def format_functionname(name: str) -> str:
@@ -351,18 +363,26 @@ def format_variable(value: str) -> str:
         return m.group(1) + m.group(2)
     raise ValueError(value)
 
+def format_string(value: str) -> str:
+    if "'" in value:
+        if '"' in value:
+            return repr(value)
+        return '"' + value + '"'
+    return "'" + value + "'"
+
 def format_argument(value: str) -> str:
     if not value:
         return value
     if re.match(r'^[$@]\{[^{]+}$', value):
         return value[2:-1]
     if re.search(r'[$@]\{', value):
-        return "f'" + value.replace("${", "{").replace("@{", "{") + "'"
+        fstring = value.replace("${", "{").replace("@{", "{")
+        return "f" + format_string(fstring)
     if value[0] in ("'", '"'):
         return value
     if all(x in string.digits for x in value):
         return value
-    return f"'{value}'"
+    return format_string(value)
 
 def format_condition(expression: str) -> str:
     # negative lookahead for escaped $, todo: add this everywhere, and single regex?
@@ -507,7 +527,6 @@ class SuiteRunner(SuiteVisitor):
     def end_suite(self, suite: robot.running.model.TestSuite):
         robot.running.context.EXECUTION_CONTEXTS.end_suite()
         print(f"Ending suite '{suite.name}'")
-        return "b"
 
     def visit_test(self, test: robot.running.model.TestCase):
         cw = CodeWriter()
@@ -553,9 +572,18 @@ class SuiteRunner(SuiteVisitor):
                     for arg in x.args:
                         parts = arg.split('=', maxsplit=1)
                         if len(parts) == 1:
-                            args.append(format_argument(parts[0]))
+                            args.append(format_argument(arg))
                         else:
-                            kwargs[parts[0]] = format_argument(parts[1])
+                            first_quote = re.search(r'''["']''', arg)
+                            if first_quote:
+                                first_quote = first_quote.pos
+                            else:
+                                first_quote = math.inf
+                            if len(parts[0]) < first_quote:
+                                kwargs[parts[0]] = format_argument(parts[1])
+                            else:
+                                # oc get DataScienceCluster/${dsc} -n ${namespace} -o 'jsonpath={.spec.components.${component}.managementState}'
+                                args.append(format_argument(arg))
                     expression = f"{name}({', '.join(args)}{',' if args and kwargs else ''}{', '.join(k + '=' + v for k, v in kwargs.items())})"
                     if x.assign:
                         lhs = ', '.join([format_assignment(arg) for arg in x.assign])
