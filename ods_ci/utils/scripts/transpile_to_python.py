@@ -237,10 +237,41 @@ class TestGetSuite(unittest.TestCase):
 
         # testsuite.run()
 
-        runner = SuiteRunner(testsuite)
+        runner = SuiteRunner(testsuite, )
         runner.run()
         code = runner.get_python_code()
         assert len(code) > 42
+
+        path = pathlib.Path("expected_result.txt")
+        # path.write_text(code)
+        if path.exists():
+            expected_result = path.read_text()
+            assert sorted(expected_result.splitlines()) == sorted(code.splitlines())
+        else:
+            raise FileNotFoundError(path)
+
+        print(code)
+
+    def test_build_js_suite(self):
+        REPO_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
+        builder = TestSuiteBuilder()
+        # testsuite = builder.build(REPO_ROOT / "ods_ci" / "tests/")
+        testsuite = builder.build(REPO_ROOT / "ods_ci")
+
+        # testsuite.run()
+
+        runner = SuiteRunner(testsuite, JSCodeWriter)
+        runner.run()
+        code = runner.get_python_code()
+        assert len(code) > 42
+
+        path = pathlib.Path("expected_result_js.txt")
+        path.write_text(code)
+        if path.exists():
+            expected_result = path.read_text()
+            assert sorted(expected_result.splitlines()) == sorted(code.splitlines())
+        else:
+            raise FileNotFoundError(path)
 
         print(code)
 
@@ -258,7 +289,7 @@ User cannot log in with bad password
     Status Should Be    Access Denied"""
 
         testsuite = robot.api.TestSuite.from_string(sources)
-        runner = SuiteRunner(testsuite)
+        runner = SuiteRunner(testsuite, )
         runner.run()
 
         assert runner.get_python_code() == """def test_user_can_create_an_account_and_log_in():
@@ -287,7 +318,7 @@ Invalid password
 """
 
         testsuite = robot.api.TestSuite.from_string(sources)
-        runner = SuiteRunner(testsuite)
+        runner = SuiteRunner(testsuite, )
         runner.run()
 
     def test_quickstart_userkeywords1(self):
@@ -329,8 +360,9 @@ She cannot use the old password anymore
     Status should be    Access Denied"""
 
         testsuite = robot.api.TestSuite.from_string(sources)
-        runner = SuiteRunner(testsuite)
+        runner = SuiteRunner(testsuite, )
         runner.run()
+
 
 def test_named_args():
     sources = """*** Test Cases ***
@@ -339,13 +371,14 @@ Verify something
     Run Query And Check Output    query_code=${QUERY_CATALOGS_PY}
     ...    expected_output=['system' 'tpch']"""
     testsuite = robot.api.TestSuite.from_string(sources)
-    runner = SuiteRunner(testsuite)
+    runner = SuiteRunner(testsuite, )
     runner.run()
 
     assert runner.get_python_code() == """def test_verify_something():
     perform_dashboard_api_endpoint_put_call(endpoint=CM_ENDPOINT_PT0)
     run_query_and_check_output(query_code=QUERY_CATALOGS_PY, expected_output="['system' 'tpch']")
 """
+
 
 def test_unquote():
     for inp, outp in (
@@ -354,6 +387,7 @@ def test_unquote():
         ('''"expected_output=['system' 'tpch']"''', "expected_output=['system' 'tpch']"),
     ):
         assert format_unquote(inp) == outp
+
 
 def format_unquote(value: str) -> str:
     quoted_string = re.match(r"""^(?P<q>["'])
@@ -366,15 +400,18 @@ def format_unquote(value: str) -> str:
         return value[1:-1]
     return value
 
+
 def format_functionname(name: str) -> str:
     name = name.lower()
     name = name.translate(str.maketrans(' -/()', '_____', '"'))
     return name
 
+
 def format_assignment(value: str) -> str:
     if (m := re.match(r'^[$@&]\{([^{]+)}\s*=?\s*$', value)) is not None:
         return m.group(1)
     raise ValueError(value)
+
 
 def format_variable(value: str) -> str:
     """variable or actually a variable expression
@@ -384,12 +421,14 @@ def format_variable(value: str) -> str:
         return m.group(1) + m.group(2)
     raise ValueError(value)
 
+
 def format_string(value: str) -> str:
     if "'" in value:
         if '"' in value:
             return repr(value)
         return '"' + value + '"'
     return "'" + value + "'"
+
 
 def format_argument(value: str) -> str:
     if not value:
@@ -406,6 +445,7 @@ def format_argument(value: str) -> str:
         return value
     return format_string(value)
 
+
 def format_condition(expression: str) -> str:
     # negative lookahead for escaped $, todo: add this everywhere, and single regex?
     # also doing the quotes removal
@@ -413,17 +453,46 @@ def format_condition(expression: str) -> str:
     expression = re.sub(r'(?P<q>"?)(?!\\)[$&@](\w+)(?P=q)', r'\2', expression)
     return expression
 
+
 class CodeWriter():
     def __init__(self):
         self.buffer = io.StringIO()
         self.indent = 0
 
-    def begin(self, line: str):
-        self.buffer.write((" " * 4 * self.indent) + line + "\n")
-        self.indent += 1
-
     def add(self, line: str):
         self.buffer.write((" " * 4 * self.indent) + line + "\n")
+
+    def begin(self, line: str):
+        self.add(line)
+        self.indent += 1
+
+    def begin_test(self, name: str):
+        self.begin_function(name, [])
+
+    def begin_function(self, name: str, parameters: list[str]):
+        self.begin(f"def {name}({', '.join(parameters)}):")
+
+    def begin_if(self, condition: str):
+        self.begin(f"if {condition}:")
+
+    def begin_elif(self, condition: str):
+        self.begin(f"elif {condition}:")
+
+    def begin_else(self):
+        self.begin(f"else:")
+
+    def begin_for_in(self, variables: list[str], values: list[str]):
+        self.begin(f"for {variables} in {values}:")
+
+    def begin_for_enumerate(self, variables: str, values: str, start: int | None):
+        if start:
+            self.begin(f"for {variables} in enumerate({values}, start={start}):")
+        else:
+            self.begin(f"for {variables} in enumerate({values}):")
+
+    def begin_for_range(self, variables: str, values: str):
+        """https://stackoverflow.com/questions/10179815/get-loop-counter-index-using-for-of-syntax-in-javascript"""
+        self.begin(f"for {variables} in range({values}):")
 
     def end(self):
         self.indent -= 1
@@ -432,9 +501,57 @@ class CodeWriter():
         print(self.buffer.getvalue())
 
 
+class JSCodeWriter(CodeWriter):
+    def __init__(self):
+        super().__init__()
+
+    def add(self, line: str):
+        self.buffer.write((" " * 4 * self.indent) + line + "\n")
+
+    def begin(self, line: str):
+        self.add(line)
+        self.indent += 1
+
+    def begin_test(self, name: str):
+        self.begin_function(name, [])
+
+    def begin_function(self, name: str, parameters: list[str]):
+        self.begin(f"function {name}({', '.join(parameters)}) {{")
+
+    def begin_if(self, condition: str):
+        self.begin(f"if ({condition}) {{")
+
+    def begin_elif(self, condition: str):
+        self.begin(f"else if ({condition}) {{")
+
+    def begin_else(self):
+        self.begin(f"else {{")
+
+    def begin_for_in(self, variables: list[str], values: list[str]):
+        self.begin(f"for ({variables} of {values}) {{")
+
+    def begin_for_enumerate(self, variables: str, values: str, start: int | None):
+        if start:
+            self.begin(f"for ({variables} of enumerate({values}, start={start})) {{")
+        else:
+            self.begin(f"for ({variables} of enumerate({values})) {{")
+
+    def begin_for_range(self, variables: str, values: str):
+        """https://stackoverflow.com/questions/10179815/get-loop-counter-index-using-for-of-syntax-in-javascript"""
+        self.begin(f"for {variables} in range({values}) {{")
+
+    def end(self):
+        self.indent -= 1
+        self.add("}")
+
+    def print(self):
+        print(self.buffer.getvalue())
+
+
 class SuiteRunner(SuiteVisitor):
-    def __init__(self, testsuite: robot.running.model.TestSuite):
+    def __init__(self, testsuite: robot.running.model.TestSuite, writer_class: type[CodeWriter] = CodeWriter):
         self.testsuite = testsuite
+        self.writerClass = writer_class
 
         self.usedkeywords = set()
         self.userkeywords = {}
@@ -517,7 +634,7 @@ class SuiteRunner(SuiteVisitor):
             print(keyword)
             # if not hasattr(keyword, "body"):
             #     continue
-            cw = CodeWriter()
+            cw = self.writerClass()
             fname = format_functionname(keyword.name)
             arglist = []
             for arg in keyword.arguments.argument_names:
@@ -525,7 +642,7 @@ class SuiteRunner(SuiteVisitor):
                     arglist.append(arg + "=" + format_argument(keyword.arguments.defaults[arg]))
                 else:
                     arglist.append(arg)
-            cw.begin(f"def {fname}({', '.join(arglist)}):")
+            cw.begin_function(fname, arglist)
             self.translate_body(keyword.body, cw)
             cw.end()
             # todo have to namespace these
@@ -537,7 +654,7 @@ class SuiteRunner(SuiteVisitor):
 
         for keyword in suite.resource.keywords:
             keyword: robot.running.model.UserKeyword
-            cw = CodeWriter()
+            cw = self.writerClass()
             fname = format_functionname(keyword.name)
             arglist = []
             for arg in keyword.args:
@@ -546,7 +663,7 @@ class SuiteRunner(SuiteVisitor):
                     arglist.append(format_variable(arg))
                 else:
                     arglist.append(format_variable(parts[0]) + "=" + format_argument(parts[1]))
-            cw.begin(f"def {fname}({', '.join(arglist)}):")
+            cw.begin_function(fname, arglist)
             self.translate_body(keyword.body, cw)
             cw.end()
             self.userkeywords[fname] = cw.buffer.getvalue()
@@ -561,9 +678,9 @@ class SuiteRunner(SuiteVisitor):
         print(f"Ending suite '{suite.name}'")
 
     def visit_test(self, test: robot.running.model.TestCase):
-        cw = CodeWriter()
+        cw = self.writerClass()
         test_function_name = "test_" + format_functionname(test.name)
-        cw.begin(f"def {test_function_name}():")
+        cw.begin_test(test_function_name)
 
         print(f"Visiting test '{test.name}' {type(test.body)}")
         body: robot.running.model.Body = test.body
@@ -577,7 +694,7 @@ class SuiteRunner(SuiteVisitor):
     # def visit_keyword(self, keyword: robot.running.model.Keyword):
     #     if not hasattr(keyword, 'body'):
     #         return
-    #     cw = CodeWriter()
+    #     cw = self.writerClass()
     #
     #
     #
@@ -628,13 +745,14 @@ class SuiteRunner(SuiteVisitor):
                     for y in x.body:
                         match y:
                             case robot.running.model.IfBranch():
+                                y: robot.running.model.IfBranch
                                 print("ifbranch", y.type, y.condition, y.body)
                                 if y.type == "IF":
-                                    cw.begin(f"if {format_condition(y.condition)}:")
+                                    cw.begin_if(format_condition(y.condition))
                                 elif y.type == "ELSE IF":
-                                    cw.begin(f"elif {format_condition(y.condition)}:")
+                                    cw.begin_elif(format_condition(y.condition))
                                 elif y.type == "ELSE":
-                                    cw.begin(f"else:")
+                                    cw.begin_else()
                                 else:
                                     raise Exception(f"Unexpected type '{y.type}'")
 
@@ -649,16 +767,14 @@ class SuiteRunner(SuiteVisitor):
                     match x.flavor:
                         case "IN":
                             values = ', '.join(format_variable(v) for v in x.values)
-                            cw.begin(f"for {variables} in {values}:")
+                            cw.begin_for_in(variables, values)
                         case "IN ENUMERATE":
                             values = ', '.join(format_variable(v) for v in x.values)
-                            if x.start:
-                                cw.begin(f"for {variables} in enumerate({values}, start={x.start}):")
-                            else:
-                                cw.begin(f"for {variables} in enumerate({values}):")
+                            cw.begin_for_enumerate(variables, values, x.start)
                         case "IN RANGE":
-                            values = ', '.join(format_variable(v) if v[0] in '$@&' else format_argument(v) for v in x.values)
-                            cw.begin(f"for {variables} in range({values}):")
+                            values = ', '.join(
+                                format_variable(v) if v[0] in '$@&' else format_argument(v) for v in x.values)
+                            cw.begin_for_range(variables, values)
                         case default:
                             raise Exception(f"Unexpected for '{x.flavor}'")
                     self.translate_body(x.body, cw)
