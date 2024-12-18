@@ -474,17 +474,17 @@ class CodeWriter():
         self.begin(f"else:")
 
     def begin_for_in(self, variables: list[str], values: list[str]):
-        self.begin(f"for {variables} in {values}:")
+        self.begin(f"for {', '.join(variables)} in {', '.join(values)}:")
 
-    def begin_for_enumerate(self, variables: str, values: str, start: int | None):
+    def begin_for_enumerate(self, variables: list[str], values: list[str], start: int | None):
         if start:
-            self.begin(f"for {variables} in enumerate({values}, start={start}):")
+            self.begin(f"for {', '.join(variables)} in enumerate({', '.join(values)}, start={start}):")
         else:
-            self.begin(f"for {variables} in enumerate({values}):")
+            self.begin(f"for {', '.join(variables)} in enumerate({', '.join(values)}):")
 
     def begin_for_range(self, variables: str, values: str):
         """https://stackoverflow.com/questions/10179815/get-loop-counter-index-using-for-of-syntax-in-javascript"""
-        self.begin(f"for {variables} in range({values}):")
+        self.begin(f"for {', '.join(variables)} in range({', '.join(values)}):")
 
     def end(self):
         self.scope.pop()
@@ -558,17 +558,31 @@ class JSCodeWriter(CodeWriter):
         self.begin(f"else {{")
 
     def begin_for_in(self, variables: list[str], values: list[str]):
-        self.begin(f"for ({variables} of {values}) {{")
+        vars = ', '.join(variables)
+        if len(variables) > 1:
+            vars = f"[{vars}]"
+        vals = ', '.join(values)
+        self.begin(f"for (let {vars} of {vals}) {{")
 
-    def begin_for_enumerate(self, variables: str, values: str, start: int | None):
-        if start:
-            self.begin(f"for ({variables} of enumerate({values}, start={start})) {{")
-        else:
-            self.begin(f"for ({variables} of enumerate({values})) {{")
-
-    def begin_for_range(self, variables: str, values: str):
+    def begin_for_enumerate(self, variables: list[str], values: list[str], start: int | None):
         """https://stackoverflow.com/questions/10179815/get-loop-counter-index-using-for-of-syntax-in-javascript"""
-        self.begin(f"for {variables} in range({values}) {{")
+        vars = ', '.join(variables)
+        if len(variables) > 1:
+            vars = f"[{vars}]"
+        vals = ', '.join(values)
+        if start:
+            self.begin(f"for (let {vars} of enumerate({vals}, start={start})) {{")
+        else:
+            self.begin(f"for (let {vars} of enumerate({vals})) {{")
+
+    def begin_for_range(self, variables: list[str], values: list[str]):
+        assert len(variables) == 1, variables
+        if len(values) == 1:
+            values = [0] + [values[0]]
+        if len(values) == 2:
+            values.append(1)
+        assert len(values) == 3, values
+        self.begin(f"for (let {variables[0]} = {values[0]}; {variables[0]} < {values[1]}; {variables[0]} += {values[2]}) {{")
 
     def end(self):
         super().end()
@@ -808,17 +822,16 @@ class SuiteRunner(SuiteVisitor):
                 case robot.running.model.For():
                     x: robot.running.model.For
                     print("for")
-                    variables = ', '.join(format_variable(v) for v in x.variables)
+                    variables = [format_variable(v) for v in x.variables]
                     match x.flavor:
                         case "IN":
-                            values = ', '.join(format_variable(v) for v in x.values)
+                            values = [format_variable(v) for v in x.values]
                             cw.begin_for_in(variables, values)
                         case "IN ENUMERATE":
-                            values = ', '.join(format_variable(v) for v in x.values)
+                            values = [format_variable(v) for v in x.values]
                             cw.begin_for_enumerate(variables, values, x.start)
                         case "IN RANGE":
-                            values = ', '.join(
-                                format_variable(v) if v[0] in '$@&' else cw.format_argument(v) for v in x.values)
+                            values = [format_variable(v) if v[0] in '$@&' else cw.format_argument(v) for v in x.values]
                             cw.begin_for_range(variables, values)
                         case default:
                             raise Exception(f"Unexpected for '{x.flavor}'")
