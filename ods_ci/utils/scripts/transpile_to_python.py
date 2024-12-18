@@ -361,7 +361,7 @@ def format_unquote(value: str) -> str:
         (\\(?P=q))
         | ((?!(?P=q)).)
     )*
-    (?P=q)$""", value, re.VERBOSE | re.MULTILINE)
+    (?P=q)$""", value, re.VERBOSE)
     if quoted_string:
         return value[1:-1]
     return value
