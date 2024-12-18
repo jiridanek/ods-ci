@@ -430,22 +430,6 @@ def format_string(value: str) -> str:
     return "'" + value + "'"
 
 
-def format_argument(value: str) -> str:
-    if not value:
-        return value
-    if re.match(r'^[$@]\{[^{]+}$', value):
-        return value[2:-1]
-    if re.search(r'[$@]\{', value):
-        fstring = value.replace("${", "{").replace("@{", "{")
-        return "f" + format_string(fstring)
-    # properly quoted string, todo: need to add negative lookbehind for the final quote must not be escaped
-    if re.match(r'''^(?P<q>["']) ( (\\(?P=q)) | ( . (?! (?P=q) ) ) )* (?P=q)$''', value, re.VERBOSE):
-        return value
-    if all(x in string.digits for x in value):
-        return value
-    return format_string(value)
-
-
 def format_condition(expression: str) -> str:
     # negative lookahead for escaped $, todo: add this everywhere, and single regex?
     # also doing the quotes removal
@@ -457,14 +441,22 @@ def format_condition(expression: str) -> str:
 class CodeWriter():
     def __init__(self):
         self.buffer = io.StringIO()
-        self.indent = 0
+        self.scope: list[list[str]] = [[]]
+
+    @property
+    def indent(self) -> int:
+        return len(self.scope) - 1
 
     def add(self, line: str):
         self.buffer.write((" " * 4 * self.indent) + line + "\n")
 
+    def add_assignment(self, assign: list[str], rhs):
+        lhs = ', '.join([format_assignment(arg) for arg in assign])
+        self.add(f"{lhs} = {rhs}")
+
     def begin(self, line: str):
         self.add(line)
-        self.indent += 1
+        self.scope.append([])
 
     def begin_test(self, name: str):
         self.begin_function(name, [])
@@ -495,11 +487,26 @@ class CodeWriter():
         self.begin(f"for {variables} in range({values}):")
 
     def end(self):
-        self.indent -= 1
+        self.scope.pop()
 
     def print(self):
         print(self.buffer.getvalue())
 
+    @classmethod
+    def format_argument(cls, value: str) -> str:
+        if not value:
+            return value
+        if re.match(r'^[$@]\{[^{]+}$', value):
+            return value[2:-1]
+        if re.search(r'[$@]\{', value):
+            fstring = value.replace("${", "{").replace("@{", "{")
+            return "f" + format_string(fstring)
+        # properly quoted string, todo: need to add negative lookbehind for the final quote must not be escaped
+        if re.match(r'''^(?P<q>["']) ( (\\(?P=q)) | ( . (?! (?P=q) ) ) )* (?P=q)$''', value, re.VERBOSE):
+            return value
+        if all(x in string.digits for x in value):
+            return value
+        return format_string(value)
 
 class JSCodeWriter(CodeWriter):
     def __init__(self):
@@ -508,9 +515,15 @@ class JSCodeWriter(CodeWriter):
     def add(self, line: str):
         self.buffer.write((" " * 4 * self.indent) + line + "\n")
 
+    def add_assignment(self, assign: list[str], rhs):
+        lhs = ', '.join([format_assignment(arg) for arg in assign])
+        if len(assign) == 1:
+            self.add(f"let {lhs} = {rhs}")
+        else:
+            self.add(f"let [{lhs}] = {rhs}")
+
     def begin(self, line: str):
-        self.add(line)
-        self.indent += 1
+        super().begin(line)
 
     def begin_test(self, name: str):
         self.begin_function(name, [])
@@ -541,12 +554,27 @@ class JSCodeWriter(CodeWriter):
         self.begin(f"for {variables} in range({values}) {{")
 
     def end(self):
-        self.indent -= 1
+        super().end()
         self.add("}")
 
     def print(self):
         print(self.buffer.getvalue())
 
+    @classmethod
+    def format_argument(cls, value: str) -> str:
+        if not value:
+            return value
+        if re.match(r'^[$@]\{[^{]+}$', value):
+            return value[2:-1]
+        if re.search(r'[$@]\{', value):
+            fstring = value.replace("@{", "${").replace("&{", "${")
+            return "`" + fstring + "`"
+        # properly quoted string, todo: need to add negative lookbehind for the final quote must not be escaped
+        if re.match(r'''^(?P<q>["']) ( (\\(?P=q)) | ( . (?! (?P=q) ) ) )* (?P=q)$''', value, re.VERBOSE):
+            return value
+        if all(x in string.digits for x in value):
+            return value
+        return format_string(value)
 
 class SuiteRunner(SuiteVisitor):
     def __init__(self, testsuite: robot.running.model.TestSuite, writer_class: type[CodeWriter] = CodeWriter):
@@ -639,7 +667,7 @@ class SuiteRunner(SuiteVisitor):
             arglist = []
             for arg in keyword.arguments.argument_names:
                 if arg in keyword.arguments.defaults:
-                    arglist.append(arg + "=" + format_argument(keyword.arguments.defaults[arg]))
+                    arglist.append(arg + "=" + cw.format_argument(keyword.arguments.defaults[arg]))
                 else:
                     arglist.append(arg)
             cw.begin_function(fname, arglist)
@@ -662,7 +690,7 @@ class SuiteRunner(SuiteVisitor):
                 if len(parts) == 1:
                     arglist.append(format_variable(arg))
                 else:
-                    arglist.append(format_variable(parts[0]) + "=" + format_argument(parts[1]))
+                    arglist.append(format_variable(parts[0]) + "=" + cw.format_argument(parts[1]))
             cw.begin_function(fname, arglist)
             self.translate_body(keyword.body, cw)
             cw.end()
@@ -721,7 +749,7 @@ class SuiteRunner(SuiteVisitor):
                     for arg in x.args:
                         parts = arg.split('=', maxsplit=1)
                         if len(parts) == 1:
-                            args.append(format_argument(arg))
+                            args.append(cw.format_argument(arg))
                         else:
                             arg = format_unquote(arg)
                             first_quote = re.search(r'[^\w_]', arg)
@@ -730,14 +758,13 @@ class SuiteRunner(SuiteVisitor):
                             else:
                                 first_quote = math.inf
                             if len(parts[0]) <= first_quote:
-                                kwargs[parts[0]] = format_argument(parts[1])
+                                kwargs[parts[0]] = cw.format_argument(parts[1])
                             else:
                                 # oc get DataScienceCluster/${dsc} -n ${namespace} -o 'jsonpath={.spec.components.${component}.managementState}'
-                                args.append(format_argument(arg))
+                                args.append(cw.format_argument(arg))
                     expression = f"{name}({', '.join(args)}{',' if args and kwargs else ''}{', '.join(k + '=' + v for k, v in kwargs.items())})"
                     if x.assign:
-                        lhs = ', '.join([format_assignment(arg) for arg in x.assign])
-                        cw.add(f"{lhs} = {expression}")
+                        cw.add_assignment(x.assign, expression)
                     else:
                         cw.add(expression)
                 case robot.running.model.If():
@@ -773,7 +800,7 @@ class SuiteRunner(SuiteVisitor):
                             cw.begin_for_enumerate(variables, values, x.start)
                         case "IN RANGE":
                             values = ', '.join(
-                                format_variable(v) if v[0] in '$@&' else format_argument(v) for v in x.values)
+                                format_variable(v) if v[0] in '$@&' else cw.format_argument(v) for v in x.values)
                             cw.begin_for_range(variables, values)
                         case default:
                             raise Exception(f"Unexpected for '{x.flavor}'")
@@ -822,7 +849,7 @@ class SuiteRunner(SuiteVisitor):
                     x: robot.running.model.Return
                     values = []
                     for value in x.values:
-                        values.append(format_argument(value))
+                        values.append(cw.format_argument(value))
                     cw.add(f"return{' ' if values else ''}{', '.join(values)}")
                 case robot.running.model.Break():
                     cw.add("break")
