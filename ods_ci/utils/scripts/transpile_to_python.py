@@ -368,7 +368,7 @@ def format_unquote(value: str) -> str:
 
 def format_functionname(name: str) -> str:
     name = name.lower()
-    name = name.translate(str.maketrans(' -', '__', '"'))
+    name = name.translate(str.maketrans(' -/()', '_____', '"'))
     return name
 
 def format_assignment(value: str) -> str:
@@ -703,7 +703,11 @@ class SuiteRunner(SuiteVisitor):
                     #     self.translate_body(x.finally_branch, cw)
                     #     cw.end()
                 case robot.running.model.Return():
-                    cw.add("return 'something'")
+                    x: robot.running.model.Return
+                    values = []
+                    for value in x.values:
+                        values.append(format_argument(value))
+                    cw.add(f"return{' ' if values else ''}{', '.join(values)}")
                 case robot.running.model.Break():
                     cw.add("break")
                 case robot.running.model.Continue():
