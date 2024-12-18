@@ -508,19 +508,36 @@ class CodeWriter():
             return value
         return format_string(value)
 
+
 class JSCodeWriter(CodeWriter):
     def __init__(self):
         super().__init__()
 
+    def has_defined(self, var: str):
+        for level in self.scope:
+            if var in level:
+                return True
+        return False
+
     def add(self, line: str):
         self.buffer.write((" " * 4 * self.indent) + line + "\n")
 
+    # this is not tracking scope of the Robot variable and assumes that
+    # if it could've been the one in scope, then we do mean that one
     def add_assignment(self, assign: list[str], rhs):
-        lhs = ', '.join([format_assignment(arg) for arg in assign])
-        if len(assign) == 1:
-            self.add(f"let {lhs} = {rhs}")
+        vars = [format_assignment(arg) for arg in assign]
+        lhs = ', '.join(vars)
+
+        if all(self.has_defined(var) for var in vars):
+            keyword = ""
         else:
-            self.add(f"let [{lhs}] = {rhs}")
+            keyword = "let "
+
+        if len(assign) == 1:
+            self.add(f"{keyword}{lhs} = {rhs}")
+        else:
+            self.add(f"{keyword}[{lhs}] = {rhs}")
+        self.scope[-1].extend(vars)
 
     def begin(self, line: str):
         super().begin(line)
@@ -575,6 +592,7 @@ class JSCodeWriter(CodeWriter):
         if all(x in string.digits for x in value):
             return value
         return format_string(value)
+
 
 class SuiteRunner(SuiteVisitor):
     def __init__(self, testsuite: robot.running.model.TestSuite, writer_class: type[CodeWriter] = CodeWriter):
