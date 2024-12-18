@@ -22,6 +22,7 @@ import os
 import pathlib
 import re
 import shutil
+import string
 import unittest
 import unittest.mock
 
@@ -344,7 +345,6 @@ def format_assignment(value: str) -> str:
 
 def format_variable(value: str) -> str:
     """variable or actually a variable expression
-
     such as `@{DICTIONARY}[classifiers]`
     """
     if (m := re.match(r'^[$@&]\{([^{]+)}(.*)$', value)) is not None:
@@ -359,6 +359,8 @@ def format_argument(value: str) -> str:
     if re.search(r'[$@]\{', value):
         return "f'" + value.replace("${", "{").replace("@{", "{") + "'"
     if value[0] in ("'", '"'):
+        return value
+    if all(x in string.digits for x in value):
         return value
     return f"'{value}'"
 
@@ -475,7 +477,13 @@ class SuiteRunner(SuiteVisitor):
             #     continue
             cw = CodeWriter()
             fname = format_functionname(keyword.name)
-            cw.begin(f"def {fname}(*args, **kwargs):")
+            arglist = []
+            for arg in keyword.arguments.argument_names:
+                if arg in keyword.arguments.defaults:
+                    arglist.append(arg + "=" + format_argument(keyword.arguments.defaults[arg]))
+                else:
+                    arglist.append(arg)
+            cw.begin(f"def {fname}({', '.join(arglist)}):")
             self.translate_body(keyword.body, cw)
             # todo have to namespace these
             self.userkeywords[fname] = cw.buffer.getvalue()
