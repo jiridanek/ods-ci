@@ -335,15 +335,36 @@ She cannot use the old password anymore
 def test_named_args():
     sources = """*** Test Cases ***
 Verify something
-    Perform Dashboard API Endpoint PUT Call   endpoint=${CM_ENDPOINT_PT0}"""
+    Perform Dashboard API Endpoint PUT Call   endpoint=${CM_ENDPOINT_PT0}
+    Run Query And Check Output    query_code=${QUERY_CATALOGS_PY}
+    ...    expected_output=['system' 'tpch']"""
     testsuite = robot.api.TestSuite.from_string(sources)
     runner = SuiteRunner(testsuite)
     runner.run()
 
     assert runner.get_python_code() == """def test_verify_something():
     perform_dashboard_api_endpoint_put_call(endpoint=CM_ENDPOINT_PT0)
+    run_query_and_check_output(query_code=QUERY_CATALOGS_PY, expected_output="['system' 'tpch']")
 """
 
+def test_unquote():
+    for inp, outp in (
+        ("", ""),
+        ("''", ""),
+        ('''"expected_output=['system' 'tpch']"''', "expected_output=['system' 'tpch']"),
+    ):
+        assert format_unquote(inp) == outp
+
+def format_unquote(value: str) -> str:
+    quoted_string = re.match(r"""^(?P<q>["'])
+    (
+        (\\(?P=q))
+        | ((?!(?P=q)).)
+    )*
+    (?P=q)$""", value, re.VERBOSE | re.MULTILINE)
+    if quoted_string:
+        return value[1:-1]
+    return value
 
 def format_functionname(name: str) -> str:
     name = name.lower()
@@ -378,7 +399,8 @@ def format_argument(value: str) -> str:
     if re.search(r'[$@]\{', value):
         fstring = value.replace("${", "{").replace("@{", "{")
         return "f" + format_string(fstring)
-    if value[0] in ("'", '"'):
+    # properly quoted string, todo: need to add negative lookbehind for the final quote must not be escaped
+    if re.match(r'''^(?P<q>["']) ( (\\(?P=q)) | ( . (?! (?P=q) ) ) )* (?P=q)$''', value, re.VERBOSE):
         return value
     if all(x in string.digits for x in value):
         return value
@@ -505,6 +527,7 @@ class SuiteRunner(SuiteVisitor):
                     arglist.append(arg)
             cw.begin(f"def {fname}({', '.join(arglist)}):")
             self.translate_body(keyword.body, cw)
+            cw.end()
             # todo have to namespace these
             self.userkeywords[fname] = cw.buffer.getvalue()
 
@@ -513,10 +536,19 @@ class SuiteRunner(SuiteVisitor):
                 print("baf")
 
         for keyword in suite.resource.keywords:
+            keyword: robot.running.model.UserKeyword
             cw = CodeWriter()
             fname = format_functionname(keyword.name)
-            cw.begin(f"def {fname}(*args, **kwargs):")
+            arglist = []
+            for arg in keyword.args:
+                parts = arg.split("=")
+                if len(parts) == 1:
+                    arglist.append(format_variable(arg))
+                else:
+                    arglist.append(format_variable(parts[0]) + "=" + format_argument(parts[1]))
+            cw.begin(f"def {fname}({', '.join(arglist)}):")
             self.translate_body(keyword.body, cw)
+            cw.end()
             self.userkeywords[fname] = cw.buffer.getvalue()
 
             if keyword.name == "Get must-gather Logs":
@@ -574,12 +606,13 @@ class SuiteRunner(SuiteVisitor):
                         if len(parts) == 1:
                             args.append(format_argument(arg))
                         else:
-                            first_quote = re.search(r'''["']''', arg)
+                            arg = format_unquote(arg)
+                            first_quote = re.search(r'[^\w_]', arg)
                             if first_quote:
-                                first_quote = first_quote.pos
+                                first_quote = first_quote.start()
                             else:
                                 first_quote = math.inf
-                            if len(parts[0]) < first_quote:
+                            if len(parts[0]) <= first_quote:
                                 kwargs[parts[0]] = format_argument(parts[1])
                             else:
                                 # oc get DataScienceCluster/${dsc} -n ${namespace} -o 'jsonpath={.spec.components.${component}.managementState}'
