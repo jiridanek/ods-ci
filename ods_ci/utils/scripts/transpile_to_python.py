@@ -239,7 +239,7 @@ class TestGetSuite(unittest.TestCase):
 
         runner = SuiteRunner(testsuite, )
         runner.run()
-        code = runner.get_python_code()
+        code = runner.code
         assert len(code) > 42
 
         path = pathlib.Path("expected_result.txt")
@@ -262,11 +262,14 @@ class TestGetSuite(unittest.TestCase):
 
         runner = SuiteRunner(testsuite, JSCodeWriter)
         runner.run()
-        code = runner.get_python_code()
+        code = runner.code
         assert len(code) > 42
 
         path = pathlib.Path("expected_result_js.txt")
-        path.write_text(code)
+        content = []
+        for file, text in code.items():
+            content.append(f"// ***** {file} **** \n\n {text}")
+        path.write_text('\n'.join(content))
         if path.exists():
             expected_result = path.read_text()
             assert sorted(expected_result.splitlines()) == sorted(code.splitlines())
@@ -292,7 +295,7 @@ User cannot log in with bad password
         runner = SuiteRunner(testsuite, )
         runner.run()
 
-        assert runner.get_python_code() == """def test_user_can_create_an_account_and_log_in():
+        assert runner.code == """def test_user_can_create_an_account_and_log_in():
     create_valid_user('fred', 'P4ssw0rd')
     attempt_to_login_with_credentials('fred', 'P4ssw0rd')
     status_should_be('Logged In')
@@ -374,7 +377,7 @@ Verify something
     runner = SuiteRunner(testsuite, )
     runner.run()
 
-    assert runner.get_python_code() == """def test_verify_something():
+    assert runner.code == """def test_verify_something():
     perform_dashboard_api_endpoint_put_call(endpoint=CM_ENDPOINT_PT0)
     run_query_and_check_output(query_code=QUERY_CATALOGS_PY, expected_output="['system' 'tpch']")
 """
@@ -613,12 +616,16 @@ class SuiteRunner(SuiteVisitor):
         self.testsuite = testsuite
         self.writerClass = writer_class
 
+        self.code: dict[str, str] = {}
+
+        self.generated_constants = ""
         self.usedkeywords = set()
         self.userkeywords = {}
         self.generated_test_methods: list[str] = []
 
     def get_python_code(self) -> str:
         code = ""
+        code += self.generated_constants + "\n\n"
         for kw in self.usedkeywords:
             if kw in self.userkeywords:
                 if code:
@@ -682,9 +689,15 @@ class SuiteRunner(SuiteVisitor):
         variables.set_local_variable("${NOTEBOOK_USER_PASSWORD}", "fake")
         variables.set_local_variable("${PIP_INDEX_URL}", "fake")
         variables.set_local_variable("${PIP_TRUSTED_HOST}", "fake")
+
+        cw = self.writerClass()
         # here are the variables from the imported files, the values are interpolated
         for variable, variablevalue in variables.as_dict().items():
             print(f"variable '{variable}'", variablevalue)
+            if type(variablevalue) == str:
+                variablevalue = format_string(variablevalue)
+            cw.add_assignment([variable], variablevalue)
+        self.generated_constants = cw.buffer.getvalue()
 
         # user_keywords: robot.running.userkeyword.UserLibrary = ns._kw_store.user_keywords
         # for keyword in user_keywords.handlers:
@@ -736,6 +749,15 @@ class SuiteRunner(SuiteVisitor):
     def end_suite(self, suite: robot.running.model.TestSuite):
         robot.running.context.EXECUTION_CONTEXTS.end_suite()
         print(f"Ending suite '{suite.name}'")
+
+        code = self.get_python_code()
+        self.code[suite.name] = code
+
+        # reset vars
+        self.generated_constants = ""
+        self.usedkeywords = set()
+        self.userkeywords = {}
+        self.generated_test_methods: list[str] = []
 
     def visit_test(self, test: robot.running.model.TestCase):
         cw = self.writerClass()

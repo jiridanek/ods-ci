@@ -51,6 +51,9 @@ ${RELEASE_VERSION_ATTRIBUTE_PATH}=      .status.release.version
 
 
 *** Keywords ***
+Huga Caga
+    Protect Sensitive Variables In Keywords
+
 RHOSi Setup
     [Documentation]    Applies RHOSi Settings and stores availability metrics
     ...                The suggested usage of this keyword is to call it inside all the Suite Setup keywords.
