@@ -8,7 +8,7 @@ Resource         ../../../Resources/Page/ODH/ODHDashboard/ODHDashboard.robot
 Resource         ../../../Resources/Page/ODH/ODHDashboard/ODHDashboardSettings.resource
 Library          ../../../../libs/Helpers.py
 Library          OpenShiftLibrary
-Suite Setup      Set Library Search Order    SeleniumLibrary
+Suite Setup      Setup
 Suite Teardown   Teardown
 Test Tags       JupyterHub
 
@@ -125,6 +125,10 @@ Get Notebook Culler Timeout From Culler Pod
     ${CULLER_POD} =  Get Notebook Culler Pod Name
     ${culler_env_timeout} =  Run  oc exec ${CULLER_POD} -n ${APPLICATIONS_NAMESPACE} -- printenv CULL_IDLE_TIME  # robocop: disable
     RETURN  ${culler_env_timeout}
+
+Setup
+    RHOSi Setup
+    Set Library Search Order  SeleniumLibrary
 
 Teardown
     [Documentation]    Teardown for the test
