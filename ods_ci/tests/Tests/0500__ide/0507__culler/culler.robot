@@ -58,6 +58,9 @@ Verify Culler Does Not Kill Active Server
     Wait Until Culler Timeout Plus A Drift Window Which By Default Equals 12 Minutes
     Check If Server Pod Still Exists
 
+    Clean Up Server
+    Stop JupyterLab Notebook Server
+
 Verify Do Not Stop Idle Notebooks
     [Documentation]    Disables the culler (default configuration) and verifies nb is not culled
     [Tags]    Tier2
@@ -68,6 +71,9 @@ Verify Do Not Stop Idle Notebooks
     Spawn Server And Run Notebook Which Will Not Keep Server Active
     Wait Until Culler Timeout Plus A Drift Window Which By Default Equals 12 Minutes
     Check If Server Pod Still Exists
+
+    Clean Up Server
+    Stop JupyterLab Notebook Server
 
 Verify That "Stop Idle Notebook" Setting Is Not Overwritten After Restart Of Operator Pod
     [Documentation]    Restart the operator pod and verify if "Stop Idle Notebook" setting
