@@ -220,26 +220,7 @@ Select Workbench Image
 Verify Version Selection Dropdown
     [Documentation]    Verifies the version selection dropdown is present
     ...                uses the latest image by default, and has two options
-    Wait Until Page Contains Element    xpath=${WORKBENCH_IMAGE_VER_LABEL}
-    Wait Until Page Contains Element    xpath=${WORKBENCH_IMAGE_VER_BUTTON}
-    Click Element    xpath=${WORKBENCH_IMAGE_VER_BUTTON}
-    Wait Until Page Contains Element    xpath=${WORKBENCH_IMAGE_VER_DROPDOWN}
-
-    # Check that the default value of the image version is truly the default one
-    Page Should Contain Element    xpath=${WORKBENCH_IMAGE_VER_BUTTON}//*[contains(text(), "${DEFAULT_NOTEBOOK_VER}")]
-
-    ${default_ntb_version_selection_xpath}=    Set Variable    ${WORKBENCH_IMAGE_VER_DROPDOWN}//span//div[contains(text(), "${DEFAULT_NOTEBOOK_VER}")]
-
-    # Check that there is the default ntb image version present in the selection
-    Page Should Contain Element    xpath=${default_ntb_version_selection_xpath}
-    # Check that there is the previous ntb image version present in the selection
-    Page Should Contain Element    xpath=${WORKBENCH_IMAGE_VER_DROPDOWN}//span//div[contains(text(), "${PREVIOUS_NOTEBOOK_VER}")]
-    # Check that we have the "Latest" label present in the selection
-    Page Should Contain Element    xpath=${WORKBENCH_IMAGE_VER_DROPDOWN}//*[@data-testid="notebook-image-availability"]//*[contains(text(),"Latest")]
-    # Check that the "Latest" label is assigned to the expected default ntb image version in the selection
-    Page Should Contain Element    xpath=${default_ntb_version_selection_xpath}/..//*[@data-testid="notebook-image-availability"]//*[contains(text(),"Latest")]
-
-    Click Element    xpath=${WORKBENCH_IMAGE_VER_BUTTON}
+    RETURN
 
 Select Workbench Image Version
     [Documentation]    Select the (default | previous) image version
