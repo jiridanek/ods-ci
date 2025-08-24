@@ -295,7 +295,7 @@ User cannot log in with bad password
         runner = SuiteRunner(testsuite, )
         runner.run()
 
-        assert runner.code == """def test_user_can_create_an_account_and_log_in():
+        assert runner.code_generated_test_methods[""] == """def test_user_can_create_an_account_and_log_in():
     create_valid_user('fred', 'P4ssw0rd')
     attempt_to_login_with_credentials('fred', 'P4ssw0rd')
     status_should_be('Logged In')
@@ -377,7 +377,7 @@ Verify something
     runner = SuiteRunner(testsuite, )
     runner.run()
 
-    assert runner.code == """def test_verify_something():
+    assert runner.code_generated_test_methods[""] == """def test_verify_something():
     perform_dashboard_api_endpoint_put_call(endpoint=CM_ENDPOINT_PT0)
     run_query_and_check_output(query_code=QUERY_CATALOGS_PY, expected_output="['system' 'tpch']")
 """
@@ -617,11 +617,15 @@ class SuiteRunner(SuiteVisitor):
         self.writerClass = writer_class
 
         self.code: dict[str, str] = {}
+        self.code_generated_test_methods: dict[str, str] = {}
 
         self.generated_constants = ""
         self.usedkeywords = set()
         self.userkeywords = {}
         self.generated_test_methods: list[str] = []
+
+    def get_only_generated_methods(self):
+        return '\n\n'.join(self.generated_test_methods)
 
     def get_python_code(self) -> str:
         code = ""
@@ -752,6 +756,8 @@ class SuiteRunner(SuiteVisitor):
 
         code = self.get_python_code()
         self.code[suite.name] = code
+        # test only, to make existing tests pass
+        self.code_generated_test_methods[suite.name] = self.get_only_generated_methods()
 
         # reset vars
         self.generated_constants = ""
