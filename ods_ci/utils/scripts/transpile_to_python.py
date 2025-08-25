@@ -287,7 +287,7 @@ class TestGetSuite(unittest.TestCase):
                 rel.parent.mkdir(parents=True, exist_ok=True)
                 text = '\n\n'.join(itertools.chain([f.constants], f.keywords.values(), f.test_methods))
                 rel.write_text(text)
-                print(text)
+                #print(text)
 
         return
 
