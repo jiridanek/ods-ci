@@ -19,6 +19,7 @@ Done. Found 14 new tests in master which were not present in origin/releases/2.9
 import argparse
 import dataclasses
 import io
+import itertools
 import math
 import os
 import pathlib
@@ -38,6 +39,9 @@ import robot.api.parsing
 import robot.api.interfaces
 import robot.running.model
 
+from ods_ci.utils.scripts.code_writer import CodeWriter
+from ods_ci.utils.scripts.code_writer_utils import format_string, format_functionname, format_variable, format_unquote, format_condition
+from ods_ci.utils.scripts.js_code_writer import JSCodeWriter
 from ods_ci.utils.scripts.util import execute_command
 
 
@@ -252,7 +256,7 @@ class TestGetSuite(unittest.TestCase):
         else:
             raise FileNotFoundError(path)
 
-        print(code)
+        #print(code)
 
     def test_build_js_suite(self):
         REPO_ROOT = pathlib.Path(__file__).parent.parent.parent.parent
@@ -266,6 +270,28 @@ class TestGetSuite(unittest.TestCase):
         runner.run()
         code = runner.code
         assert len(code) > 42
+
+        base = pathlib.Path(__file__).parent.parent.parent.resolve().absolute()
+
+        output = pathlib.Path("./output").absolute()
+
+        shutil.rmtree(output, ignore_errors=True)
+        output.mkdir(parents=True, exist_ok=True)
+
+        for cf, f in runner.code_files.items():
+            if pathlib.Path(cf).is_relative_to(base):
+                rel = output / pathlib.Path(cf).relative_to(base)
+                print(rel)
+                if not rel.name.endswith(".robot") and not rel.name.endswith(".resource"):
+                    continue
+                rel = rel.with_suffix(rel.suffix + ".js")
+                # if not rel.parent.exists():
+                rel.parent.mkdir(parents=True, exist_ok=True)
+                text = '\n\n'.join(itertools.chain([f.constants], f.keywords.values(), f.test_methods))
+                rel.write_text(text)
+                print(text)
+
+        return
 
         path = pathlib.Path("expected_result_js.txt")
         content = []
@@ -388,238 +414,11 @@ Verify something
 """
 
 
-def test_unquote():
-    for inp, outp in (
-        ("", ""),
-        ("''", ""),
-        ('''"expected_output=['system' 'tpch']"''', "expected_output=['system' 'tpch']"),
-    ):
-        assert format_unquote(inp) == outp
-
-
-def format_unquote(value: str) -> str:
-    quoted_string = re.match(r"""^(?P<q>["'])
-    (
-        (\\(?P=q))
-        | ((?!(?P=q)).)
-    )*
-    (?P=q)$""", value, re.VERBOSE)
-    if quoted_string:
-        return value[1:-1]
-    return value
-
-
-def format_functionname(name: str) -> str:
-    name = name.lower()
-    name = name.translate(str.maketrans(' -/()', '_____', '"'))
-    return name
-
-
-def format_assignment(value: str) -> str:
-    if (m := re.match(r'^[$@&]\{([^{]+)}\s*=?\s*$', value)) is not None:
-        return m.group(1)
-    raise ValueError(value)
-
-
-def format_variable(value: str) -> str:
-    """variable or actually a variable expression
-    such as `@{DICTIONARY}[classifiers]`
-    """
-    if (m := re.match(r'^[$@&]\{([^{]+)}(.*)$', value)) is not None:
-        return m.group(1) + m.group(2)
-    raise ValueError(value)
-
-
-def format_string(value: str) -> str:
-    if "'" in value:
-        if '"' in value:
-            return repr(value)
-        return '"' + value + '"'
-    return "'" + value + "'"
-
-
-def format_condition(expression: str) -> str:
-    # negative lookahead for escaped $, todo: add this everywhere, and single regex?
-    # also doing the quotes removal
-    expression = re.sub(r'(?P<q>"?)(?!\\)[$&@]\{([^}]+)}(?P=q)', r'\2', expression)
-    expression = re.sub(r'(?P<q>"?)(?!\\)[$&@](\w+)(?P=q)', r'\2', expression)
-    return expression
-
-
-class CodeWriter():
-    def __init__(self):
-        self.buffer = io.StringIO()
-        self.scope: list[list[str]] = [[]]
-
-    @property
-    def indent(self) -> int:
-        return len(self.scope) - 1
-
-    def add(self, line: str):
-        self.buffer.write((" " * 4 * self.indent) + line + "\n")
-
-    def add_assignment(self, assign: list[str], rhs):
-        lhs = ', '.join([format_assignment(arg) for arg in assign])
-        self.add(f"{lhs} = {rhs}")
-
-    def begin(self, line: str):
-        self.add(line)
-        self.scope.append([])
-
-    def begin_test(self, name: str):
-        self.begin_function(name, [])
-
-    def begin_function(self, name: str, parameters: list[str]):
-        self.begin(f"def {name}({', '.join(parameters)}):")
-
-    def begin_if(self, condition: str):
-        self.begin(f"if {condition}:")
-
-    def begin_elif(self, condition: str):
-        self.begin(f"elif {condition}:")
-
-    def begin_else(self):
-        self.begin(f"else:")
-
-    def begin_for_in(self, variables: list[str], values: list[str]):
-        self.begin(f"for {', '.join(variables)} in {', '.join(values)}:")
-
-    def begin_for_enumerate(self, variables: list[str], values: list[str], start: int | None):
-        if start:
-            self.begin(f"for {', '.join(variables)} in enumerate({', '.join(values)}, start={start}):")
-        else:
-            self.begin(f"for {', '.join(variables)} in enumerate({', '.join(values)}):")
-
-    def begin_for_range(self, variables: str, values: str):
-        """https://stackoverflow.com/questions/10179815/get-loop-counter-index-using-for-of-syntax-in-javascript"""
-        self.begin(f"for {', '.join(variables)} in range({', '.join(values)}):")
-
-    def end(self):
-        self.scope.pop()
-
-    def print(self):
-        print(self.buffer.getvalue())
-
-    @classmethod
-    def format_argument(cls, value: str) -> str:
-        if not value:
-            return value
-        if re.match(r'^[$@]\{[^{]+}$', value):
-            return value[2:-1]
-        if re.search(r'[$@]\{', value):
-            fstring = value.replace("${", "{").replace("@{", "{")
-            return "f" + format_string(fstring)
-        # properly quoted string, todo: need to add negative lookbehind for the final quote must not be escaped
-        if re.match(r'''^(?P<q>["']) ( (\\(?P=q)) | ( . (?! (?P=q) ) ) )* (?P=q)$''', value, re.VERBOSE):
-            return value
-        if all(x in string.digits for x in value):
-            return value
-        return format_string(value)
-
-
-class JSCodeWriter(CodeWriter):
-    def __init__(self):
-        super().__init__()
-
-    def has_defined(self, var: str):
-        for level in self.scope:
-            if var in level:
-                return True
-        return False
-
-    def add(self, line: str):
-        self.buffer.write((" " * 4 * self.indent) + line + "\n")
-
-    # this is not tracking scope of the Robot variable and assumes that
-    # if it could've been the one in scope, then we do mean that one
-    def add_assignment(self, assign: list[str], rhs):
-        vars = [format_assignment(arg) for arg in assign]
-        lhs = ', '.join(vars)
-
-        if all(self.has_defined(var) for var in vars):
-            keyword = ""
-        else:
-            keyword = "let "
-
-        if len(assign) == 1:
-            self.add(f"{keyword}{lhs} = {rhs}")
-        else:
-            self.add(f"{keyword}[{lhs}] = {rhs}")
-        self.scope[-1].extend(vars)
-
-    def begin(self, line: str):
-        super().begin(line)
-
-    def begin_test(self, name: str):
-        self.begin_function(name, [])
-
-    def begin_function(self, name: str, parameters: list[str]):
-        self.begin(f"function {name}({', '.join(parameters)}) {{")
-
-    def begin_if(self, condition: str):
-        self.begin(f"if ({condition}) {{")
-
-    def begin_elif(self, condition: str):
-        self.begin(f"else if ({condition}) {{")
-
-    def begin_else(self):
-        self.begin(f"else {{")
-
-    def begin_for_in(self, variables: list[str], values: list[str]):
-        vars = ', '.join(variables)
-        if len(variables) > 1:
-            vars = f"[{vars}]"
-        vals = ', '.join(values)
-        self.begin(f"for (let {vars} of {vals}) {{")
-
-    def begin_for_enumerate(self, variables: list[str], values: list[str], start: int | None):
-        """https://stackoverflow.com/questions/10179815/get-loop-counter-index-using-for-of-syntax-in-javascript"""
-        vars = ', '.join(variables)
-        if len(variables) > 1:
-            vars = f"[{vars}]"
-        vals = ', '.join(values)
-        if start:
-            self.begin(f"for (let {vars} of enumerate({vals}, start={start})) {{")
-        else:
-            self.begin(f"for (let {vars} of enumerate({vals})) {{")
-
-    def begin_for_range(self, variables: list[str], values: list[str]):
-        assert len(variables) == 1, variables
-        if len(values) == 1:
-            values = [0] + [values[0]]
-        if len(values) == 2:
-            values.append(1)
-        assert len(values) == 3, values
-        self.begin(f"for (let {variables[0]} = {values[0]}; {variables[0]} < {values[1]}; {variables[0]} += {values[2]}) {{")
-
-    def end(self):
-        super().end()
-        self.add("}")
-
-    def print(self):
-        print(self.buffer.getvalue())
-
-    @classmethod
-    def format_argument(cls, value: str) -> str:
-        if not value:
-            return value
-        if re.match(r'^[$@]\{[^{]+}$', value):
-            return value[2:-1]
-        if re.search(r'[$@]\{', value):
-            fstring = value.replace("@{", "${").replace("&{", "${")
-            return "`" + fstring + "`"
-        # properly quoted string, todo: need to add negative lookbehind for the final quote must not be escaped
-        if re.match(r'''^(?P<q>["']) ( (\\(?P=q)) | ( . (?! (?P=q) ) ) )* (?P=q)$''', value, re.VERBOSE):
-            return value
-        if all(x in string.digits for x in value):
-            return value
-        return format_string(value)
-
 @dataclasses.dataclass
 class CodeFile:
     test_methods: list[str] = dataclasses.field(default_factory=list)
     keywords: dict[str, str] = dataclasses.field(default_factory=dict)
-    constants: list[str] = dataclasses.field(default_factory=list)
+    constants: str = ""
 
 class SuiteRunner(SuiteVisitor):
     def __init__(self, testsuite: robot.running.model.TestSuite, writer_class: type[CodeWriter] = CodeWriter):
@@ -673,7 +472,7 @@ class SuiteRunner(SuiteVisitor):
         variables.start_suite()
         ns.start_suite()
 
-        print(suite.resource.variables)
+        # print(suite.resource.variables)
         print(f"Starting suite '{suite.name}'")
 
         for imp in suite.resource.imports:
@@ -685,9 +484,15 @@ class SuiteRunner(SuiteVisitor):
                     target = imp.directory / imp.name
                     ns.import_resource(target)
                 case "LIBRARY":
-                    pass
-                    # target = imp.directory / imp.name
-                    # ns.import_library(target)
+                    # actually we do want to import libraries, esp. Jupyter library
+                    if imp.name in ["OperatingSystem", "OpenShiftLibrary", "String", "Process", "yaml", "Collections",
+                                    "SeleniumLibrary", "RequestsLibrary", "DateTime", "Screenshot"]:
+                        # skip libs implemented in Python
+                        continue
+                    if imp.name.endswith(".py"):
+                        continue
+                    target = pathlib.Path("/Users/jdanek/IdeaProjects/ods-ci/.venv/lib/python3.11/site-packages") / imp.name
+                    ns.import_library(target)
                 case default:
                     raise Exception(f"'{imp.type}' is an unexpected resource type")
             print(f"  Import '{imp.name}'")
@@ -715,7 +520,7 @@ class SuiteRunner(SuiteVisitor):
         cw = self.writerClass()
         # here are the variables from the imported files, the values are interpolated
         for variable, variablevalue in variables.as_dict().items():
-            print(f"variable '{variable}'", variablevalue)
+            # print(f"variable '{variable}'", variablevalue)
             if type(variablevalue) == str:
                 variablevalue = format_string(variablevalue)
             cw.add_assignment([variable], variablevalue)
@@ -728,7 +533,7 @@ class SuiteRunner(SuiteVisitor):
         user_keywords: list[robot.running.userkeyword.UserLibrary] = ns._kw_store.resources.values()
         for keyword in (kw for handlers in user_keywords for kw in handlers.handlers):
             keyword: robot.running.userkeyword.UserKeywordHandler
-            print(keyword)
+            # print(keyword)
             # if not hasattr(keyword, "body"):
             #     continue
             cw = self.writerClass()
@@ -861,12 +666,12 @@ class SuiteRunner(SuiteVisitor):
                     else:
                         cw.add(expression)
                 case robot.running.model.If():
-                    print("if")
+                    #print("if")
                     for y in x.body:
                         match y:
                             case robot.running.model.IfBranch():
                                 y: robot.running.model.IfBranch
-                                print("ifbranch", y.type, y.condition, y.body)
+                                #print("ifbranch", y.type, y.condition, y.body)
                                 if y.type == "IF":
                                     cw.begin_if(format_condition(y.condition))
                                 elif y.type == "ELSE IF":
@@ -882,7 +687,7 @@ class SuiteRunner(SuiteVisitor):
 
                 case robot.running.model.For():
                     x: robot.running.model.For
-                    print("for")
+                    #print("for")
                     variables = [format_variable(v) for v in x.variables]
                     match x.flavor:
                         case "IN":
@@ -909,7 +714,7 @@ class SuiteRunner(SuiteVisitor):
                         match y:
                             case robot.running.TryBranch():
                                 y: robot.running.TryBranch
-                                print("trybranch", y.type, y.patterns, y.body)
+                                #print("trybranch", y.type, y.patterns, y.body)
                                 if y.type == "TRY":
                                     cw.begin(f"try:")
                                 elif y.type == "EXCEPT":
@@ -968,7 +773,7 @@ class BodyRunner:
         self._templated = templated
 
     def run(self, body, *args, **kwargs):
-        print("body", body)
+        #print("body", body)
         errors = []
         passed = None
         for step in iter(body):
