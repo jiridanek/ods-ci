@@ -18,14 +18,12 @@ Done. Found 14 new tests in master which were not present in origin/releases/2.9
 
 import argparse
 import dataclasses
-import io
 import itertools
 import math
 import os
 import pathlib
 import re
 import shutil
-import string
 import unittest
 import unittest.mock
 from collections import defaultdict
