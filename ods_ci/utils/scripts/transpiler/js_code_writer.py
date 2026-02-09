@@ -1,11 +1,11 @@
 import re
 import string
 
-from ods_ci.utils.scripts.code_writer import CodeWriter
-from ods_ci.utils.scripts.code_writer_utils import format_string, format_assignment
+from .py_code_writer import PyCodeWriter
+from .code_writer_utils import format_string, format_assignment
 
 
-class JSCodeWriter(CodeWriter):
+class JSCodeWriter(PyCodeWriter):
     def __init__(self):
         super().__init__()
 

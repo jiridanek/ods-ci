@@ -2,10 +2,10 @@ import io
 import re
 import string
 
-from ods_ci.utils.scripts.code_writer_utils import format_string, format_assignment
+from .code_writer_utils import format_string, format_assignment
 
 
-class CodeWriter():
+class PyCodeWriter():
     def __init__(self):
         self.buffer = io.StringIO()
         self.scope: list[list[str]] = [[]]
