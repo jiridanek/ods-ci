@@ -14,7 +14,7 @@ Navigate To Page
    ...    ${menu}
    ...    ${submenu}=${NONE}
    ...    ${subsubmenu}=${NONE}
-   ...    ${timeout}=10s
+   ...    ${timeout}=60s
    Wait Until Element Is Visible    ${SIDEBAR_XP}    timeout=${timeout}
    Wait Until Page Contains    ${menu}
    ${menu}=     Set Variable If     "${menu}" == "Deployed models"      Model Serving    ${menu}

@@ -56,12 +56,20 @@ Close Properties Panel
     END
 
 Save Pipeline Changes
-    [Documentation]    Saves changes to the pipeline
-    Click Element    xpath=//div[contains(@class, 'save-action')]/button
-    # We can also check that `Saving started` text appears but it usually shows up for a very
-    # short amount of time so let's just check the `Saving completed` only.
-    # Wait Until Page Contains    Saving started
-    Wait Until Page Contains    Saving completed
+    [Documentation]    Saves changes to the pipeline (retries: the "Saving completed" toast can
+    ...    race with the wait on slow in-kind environments)
+    ${saved} =    Set Variable    False
+    FOR    ${attempt}    IN RANGE    3
+        Click Element    xpath=//div[contains(@class, 'save-action')]/button
+        ${saved} =    Run Keyword And Return Status
+        ...    Wait Until Page Contains    Saving completed    timeout=20s
+        IF    ${saved}
+            BREAK
+        END
+    END
+    IF    ${saved} == False
+        Fail    Pipeline save did not report "Saving completed" after 3 attempts
+    END
 
 Run Pipeline
     [Documentation]    Submits the pipeline for a run

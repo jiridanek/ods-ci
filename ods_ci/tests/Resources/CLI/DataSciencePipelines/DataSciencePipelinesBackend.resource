@@ -111,7 +111,8 @@ Wait Until Pipeline Server Is Deployed
     ...                are running
     [Arguments]    ${namespace}
 
-    Wait Until Keyword Succeeds    15 times    10s
+    # In-kind (QEMU) spike: dspa pods need far longer to become running under emulation load
+    Wait Until Keyword Succeeds    40 times    10s
     ...    Verify Pipeline Server Deployments    namespace=${namespace}
 
 Wait Until Pipeline Server Is Deleted

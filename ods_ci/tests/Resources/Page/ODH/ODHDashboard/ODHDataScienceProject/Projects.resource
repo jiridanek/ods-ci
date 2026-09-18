@@ -51,6 +51,7 @@ Open Data Science Project Details Page
         IF    ${is_open} == ${FALSE}
             Open Data Science Projects Home Page
         END
+        Run Keyword And Continue On Failure    Wait Until Project Is Listed    project_title=${project_title}    timeout=90s
         Click Link    ${project_title}
         Wait Until Project Is Open    project_title=${project_title}
     END
@@ -108,7 +109,7 @@ Project Should Be Listed
 Wait Until Project Is Listed
     [Documentation]    Waits until the DS projects appears in the list in DS project Home Page
     [Arguments]     ${project_title}    ${timeout}=30s
-    Wait Until Page Contains Element    xpath=//table[@data-testid="project-view-table"]//td[@data-label="Name"]//a[text()="${project_title}"]
+    Wait Until Page Contains Element    xpath=//table[@data-testid="project-view-table"]//td[@data-label="Name"]//a[contains(., "${project_title}")]
     ...    timeout=${timeout}
 
 Project Should Not Be Listed
@@ -213,6 +214,10 @@ Create Data Science Project From CLI
 
     Run    oc label namespace ${complete_name} opendatahub.io/dashboard=true
     Run    oc label namespace ${complete_name} modelmesh-enabled=true
+    IF    "${as_user}" != "${EMPTY}"
+        # in-kind gap: `oc new-project --as` (and `oc adm policy add-cluster-role-to-user`) do not grant the creator a role here; add it explicitly
+        Run    oc create rolebinding ds-project-admin --clusterrole=admin --user=${as_user} -n ${complete_name}
+    END
     RETURN    ${complete_name}
 
 Validate Generated Resource Name
